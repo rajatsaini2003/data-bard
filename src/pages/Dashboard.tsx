@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
+import AnalyticsNotebook from "@/components/AnalyticsNotebook";
+import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   Users, 
@@ -12,11 +17,25 @@ import {
   Send,
   Plus,
   Filter,
-  Download
+  Download,
+  Upload,
+  FileText,
+  Table,
+  PieChart,
+  LineChart,
+  Paperclip,
+  Sparkles,
+  Brain,
+  FileUp
 } from "lucide-react";
 
 const Dashboard = () => {
   const [query, setQuery] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const stats = [
     {
@@ -53,11 +72,73 @@ const Dashboard = () => {
     }
   ];
 
-  const recentQueries = [
-    "Show me revenue by region for the last quarter",
-    "What are the top performing products this month?",
-    "Compare user engagement across different channels",
-    "Analyze customer churn rate by segment"
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setUploadedFiles(prev => [...prev, ...files]);
+    toast({
+      title: "Files uploaded successfully",
+      description: `${files.length} file(s) ready for analysis`,
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    setUploadedFiles(prev => [...prev, ...files]);
+    toast({
+      title: "Files uploaded successfully",
+      description: `${files.length} file(s) ready for analysis`,
+    });
+  };
+
+  const analyzeData = async () => {
+    if (!query.trim()) {
+      toast({
+        title: "Please enter a query",
+        description: "Ask a question about your data to get started",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    
+    // Simulate AI analysis
+    setTimeout(() => {
+      setAnalysisResults({
+        query: query,
+        insights: [
+          "Revenue increased 15% compared to last quarter",
+          "Top performing region is North America with 45% of total sales",
+          "Customer retention rate improved by 8%"
+        ],
+        chartType: "bar",
+        data: [
+          { name: "Q1", value: 2400 },
+          { name: "Q2", value: 2800 },
+          { name: "Q3", value: 3200 },
+          { name: "Q4", value: 3600 }
+        ]
+      });
+      setIsAnalyzing(false);
+    }, 2000);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const sampleQueries = [
+    "Show me revenue trends for the last 6 months",
+    "What are the top performing products by region?",
+    "Analyze customer acquisition costs by channel",
+    "Create a dashboard showing key performance metrics",
+    "Compare sales performance year over year",
+    "Identify patterns in customer behavior data"
   ];
 
   return (
@@ -92,71 +173,198 @@ const Dashboard = () => {
           })}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Natural Language Query */}
-          <div className="lg:col-span-2">
+        <Tabs defaultValue="analyze" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="analyze">AI Analysis</TabsTrigger>
+            <TabsTrigger value="notebook">Notebook</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analyze">
+            <div className="grid lg:grid-cols-3 gap-8">
+          {/* File Upload & AI Analysis */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* File Upload Section */}
             <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold flex items-center">
-                  <MessageSquare className="h-5 w-5 mr-2 text-primary" />
-                  AI Query Assistant
+                  <FileUp className="h-5 w-5 mr-2 text-primary" />
+                  Upload Your Data
                 </h2>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  AI Ready
+                </Badge>
+              </div>
+              
+              <div 
+                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium mb-2">Drop your files here or click to upload</p>
+                <p className="text-sm text-muted-foreground">Supports CSV, Excel, JSON, and more</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".csv,.xlsx,.xls,.json,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium">Uploaded Files:</p>
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{file.name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {(file.size / 1024).toFixed(1)}KB
+                        </Badge>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* AI Analysis Section */}
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Brain className="h-5 w-5 mr-2 text-primary" />
+                  AI Data Analyst
+                </h2>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Paperclip className="h-4 w-4 mr-2" />
+                    Attach
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
               </div>
               
               <div className="space-y-4">
                 <div className="flex space-x-2">
-                  <Input
-                    placeholder="Ask anything about your data..."
+                  <Textarea
+                    placeholder="Ask anything about your data in plain English..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex-1 bg-background/50 border-border"
+                    className="flex-1 bg-background/50 border-border min-h-[60px] resize-none"
+                    rows={2}
                   />
-                  <Button variant="hero">
-                    <Send className="h-4 w-4" />
+                  <Button 
+                    variant="hero" 
+                    onClick={analyzeData}
+                    disabled={isAnalyzing}
+                    className="px-6"
+                  >
+                    {isAnalyzing ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 
-                <div className="h-64 bg-muted/30 rounded-lg border border-border flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Your visualization will appear here</p>
-                    <p className="text-sm text-muted-foreground">Ask a question to get started</p>
+                {isAnalyzing ? (
+                  <div className="h-64 bg-muted/30 rounded-lg border border-border flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
+                      <p className="text-muted-foreground">Analyzing your data...</p>
+                      <p className="text-sm text-muted-foreground">This may take a few moments</p>
+                    </div>
                   </div>
-                </div>
+                ) : analysisResults ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-background/50 rounded-lg border border-border">
+                      <h3 className="font-medium mb-2">Analysis Results</h3>
+                      <p className="text-sm text-muted-foreground mb-3">Query: "{analysisResults.query}"</p>
+                      <div className="space-y-2">
+                        {analysisResults.insights.map((insight: string, index: number) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                            <p className="text-sm">{insight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="h-32 bg-muted/50 rounded-lg flex items-center justify-center border border-border">
+                        <BarChart3 className="h-12 w-12 text-primary" />
+                      </div>
+                      <div className="h-32 bg-muted/50 rounded-lg flex items-center justify-center border border-border">
+                        <PieChart className="h-12 w-12 text-accent-teal" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-64 bg-muted/30 rounded-lg border border-border flex items-center justify-center">
+                    <div className="text-center">
+                      <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Your analysis will appear here</p>
+                      <p className="text-sm text-muted-foreground">Upload data and ask a question to get started</p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground">
-                    Try asking: "Show me sales trends for the last 6 months"
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Notebook
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <LineChart className="h-4 w-4 mr-2" />
+                      Chart Types
+                    </Button>
+                  </div>
                   <Button variant="outline" size="sm">
                     <Download className="h-4 w-4 mr-2" />
-                    Export
+                    Export Results
                   </Button>
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Recent Queries & Quick Actions */}
+          {/* AI Suggestions & Quick Actions */}
           <div className="space-y-6">
             <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-              <h3 className="text-lg font-semibold mb-4">Recent Queries</h3>
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                AI Suggestions
+              </h3>
               <div className="space-y-3">
-                {recentQueries.map((query, index) => (
+                {sampleQueries.map((sampleQuery, index) => (
                   <div 
                     key={index} 
-                    className="p-3 rounded-lg bg-background/50 border border-border hover:bg-accent/50 cursor-pointer transition-colors text-sm"
+                    className="p-3 rounded-lg bg-background/50 border border-border hover:bg-accent/50 cursor-pointer transition-colors text-sm group"
+                    onClick={() => setQuery(sampleQuery)}
                   >
-                    {query}
+                    <div className="flex items-center justify-between">
+                      <span>{sampleQuery}</span>
+                      <Send className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
                 ))}
               </div>
               <Button variant="outline" size="sm" className="w-full mt-4">
-                View All Queries
+                <Brain className="h-4 w-4 mr-2" />
+                Generate More Ideas
               </Button>
             </Card>
 
@@ -179,6 +387,50 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+          </TabsContent>
+
+          <TabsContent value="notebook">
+            <AnalyticsNotebook />
+          </TabsContent>
+
+          <TabsContent value="dashboard">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={index} className="p-6 bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-2 rounded-lg bg-current/10 ${stat.color}`}>
+                        <Icon className={`h-6 w-6 ${stat.color}`} />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">{stat.value}</p>
+                        <p className="text-sm text-success">{stat.change}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{stat.title}</p>
+                  </Card>
+                );
+              })}
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
+                <h3 className="text-lg font-semibold mb-4">Revenue by Region</h3>
+                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="h-16 w-16 text-muted-foreground" />
+                </div>
+              </Card>
+              
+              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
+                <h3 className="text-lg font-semibold mb-4">Customer Analytics</h3>
+                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
+                  <PieChart className="h-16 w-16 text-muted-foreground" />
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
