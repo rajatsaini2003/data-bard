@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import AnalyticsNotebook from "@/components/AnalyticsNotebook";
 import { useToast } from "@/hooks/use-toast";
+import { useDatasetStore } from "@/store/datasetStore";
+import { useAuthStore } from "@/store/authStore";
 import { 
   BarChart3, 
   Users, 
@@ -32,10 +34,18 @@ import {
 const Dashboard = () => {
   const [query, setQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const { datasets, isLoading: datasetLoading, loadDatasets, uploadDataset } = useDatasetStore();
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user) {
+      loadDatasets();
+    }
+  }, [user, loadDatasets]);
 
   const stats = [
     {
@@ -72,27 +82,47 @@ const Dashboard = () => {
     }
   ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setUploadedFiles(prev => [...prev, ...files]);
-    toast({
-      title: "Files uploaded successfully",
-      description: `${files.length} file(s) ready for analysis`,
-    });
+    for (const file of files) {
+      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+        await uploadDataset(file, {
+          name: file.name.replace('.csv', ''),
+          description: `Uploaded dataset: ${file.name}`,
+          tags: ['uploaded']
+        });
+      } else {
+        toast({
+          title: "File type not supported",
+          description: "Please upload CSV files only",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    setUploadedFiles(prev => [...prev, ...files]);
-    toast({
-      title: "Files uploaded successfully",
-      description: `${files.length} file(s) ready for analysis`,
-    });
+    for (const file of files) {
+      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+        await uploadDataset(file, {
+          name: file.name.replace('.csv', ''),
+          description: `Uploaded dataset: ${file.name}`,
+          tags: ['uploaded']
+        });
+      } else {
+        toast({
+          title: "File type not supported",
+          description: "Please upload CSV files only",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const analyzeData = async () => {
@@ -128,9 +158,6 @@ const Dashboard = () => {
     }, 2000);
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  };
 
   const sampleQueries = [
     "Show me revenue trends for the last 6 months",
@@ -216,23 +243,28 @@ const Dashboard = () => {
                 />
               </div>
 
-              {uploadedFiles.length > 0 && (
+              {datasets.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Uploaded Files:</p>
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border">
+                  <p className="text-sm font-medium">Your Datasets:</p>
+                  {datasets.slice(0, 3).map((dataset, index) => (
+                    <div key={dataset.id} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border">
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{file.name}</span>
+                        <span className="text-sm">{dataset.name}</span>
                         <Badge variant="outline" className="text-xs">
-                          {(file.size / 1024).toFixed(1)}KB
+                          {new Date(dataset.created_at).toLocaleDateString()}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
-                        ×
+                      <Button variant="ghost" size="sm">
+                        View
                       </Button>
                     </div>
                   ))}
+                  {datasets.length > 3 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      +{datasets.length - 3} more datasets
+                    </p>
+                  )}
                 </div>
               )}
             </Card>

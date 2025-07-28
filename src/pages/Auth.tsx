@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,15 +7,39 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Building, Mail, Lock, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
 
 const Auth = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login, signup, isLoading } = useAuthStore();
+  
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [signupData, setSignupData] = useState({ 
+    organization_name: '', 
+    full_name: '', 
+    email: '', 
+    password: '',
+    description: ''
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 2000);
+    try {
+      await login(loginData);
+      navigate('/dashboard');
+    } catch (error) {
+      // Error handled in store
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signup(signupData);
+      navigate('/dashboard');
+    } catch (error) {
+      // Error handled in store
+    }
   };
 
   return (
@@ -41,7 +66,7 @@ const Auth = () => {
             </TabsList>
 
             <TabsContent value="signin">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
@@ -49,6 +74,8 @@ const Auth = () => {
                     <Input
                       id="email"
                       type="email"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                       placeholder="Enter your email"
                       className="pl-10 bg-background/50"
                       required
@@ -63,6 +90,8 @@ const Auth = () => {
                     <Input
                       id="password"
                       type="password"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                       placeholder="Enter your password"
                       className="pl-10 bg-background/50"
                       required
@@ -88,7 +117,7 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="company">Company Name</Label>
                   <div className="relative">
@@ -96,6 +125,8 @@ const Auth = () => {
                     <Input
                       id="company"
                       type="text"
+                      value={signupData.organization_name}
+                      onChange={(e) => setSignupData({...signupData, organization_name: e.target.value})}
                       placeholder="Your company name"
                       className="pl-10 bg-background/50"
                       required
@@ -110,6 +141,8 @@ const Auth = () => {
                     <Input
                       id="name"
                       type="text"
+                      value={signupData.full_name}
+                      onChange={(e) => setSignupData({...signupData, full_name: e.target.value})}
                       placeholder="Your full name"
                       className="pl-10 bg-background/50"
                       required
@@ -124,6 +157,8 @@ const Auth = () => {
                     <Input
                       id="signup-email"
                       type="email"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                       placeholder="Enter your email"
                       className="pl-10 bg-background/50"
                       required
@@ -138,6 +173,8 @@ const Auth = () => {
                     <Input
                       id="signup-password"
                       type="password"
+                      value={signupData.password}
+                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                       placeholder="Create a password"
                       className="pl-10 bg-background/50"
                       required

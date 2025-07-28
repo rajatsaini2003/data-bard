@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthStore>()(
       signup: async (data: SignupData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiService.auth.signup(data);
+          const response = await apiService.auth.adminSignup(data);
           
           localStorage.setItem('access_token', response.access_token);
           localStorage.setItem('refresh_token', response.refresh_token);

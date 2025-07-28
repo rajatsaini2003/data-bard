@@ -21,7 +21,7 @@ class ApiService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.VITE_API_URL || 'http://localhost:8000/api',
+      baseURL: process.env.VITE_API_URL || 'http://localhost:8000/api/v1',
       timeout: 30000,
     });
 
@@ -81,8 +81,13 @@ class ApiService {
       return response.data;
     },
 
-    signup: async (data: SignupData): Promise<AuthResponse> => {
-      const response = await this.client.post('/auth/signup', data);
+    adminSignup: async (data: SignupData): Promise<AuthResponse> => {
+      const response = await this.client.post('/auth/admin/signup', data);
+      return response.data;
+    },
+
+    employeeSignup: async (data: { invite_token: string; full_name: string; email: string; password: string }): Promise<AuthResponse> => {
+      const response = await this.client.post('/auth/employee/signup', data);
       return response.data;
     },
 

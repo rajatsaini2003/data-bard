@@ -51,11 +51,11 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              Sign In
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth">Sign In</Link>
             </Button>
-            <Button variant="hero" size="sm">
-              Get Started
+            <Button variant="hero" size="sm" asChild>
+              <Link to="/auth">Get Started</Link>
             </Button>
           </div>
 
@@ -96,11 +96,11 @@ const Navigation = () => {
               );
             })}
             <div className="pt-4 flex flex-col space-y-2">
-              <Button variant="outline" size="sm">
-                Sign In
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth">Sign In</Link>
               </Button>
-              <Button variant="hero" size="sm">
-                Get Started
+              <Button variant="hero" size="sm" asChild>
+                <Link to="/auth">Get Started</Link>
               </Button>
             </div>
           </div>

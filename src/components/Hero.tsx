@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, Brain, Database } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-analytics.jpg";
 
 const Hero = () => {
@@ -30,9 +31,11 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button variant="hero" size="lg" className="group">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <Button variant="hero" size="lg" className="group" asChild>
+                <Link to="/auth">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
               </Button>
               <Button variant="outline" size="lg">
                 Watch Demo
