@@ -21,7 +21,7 @@ class ApiService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.VITE_API_URL || 'http://localhost:8000/api/v1',
+      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
       timeout: 30000,
     });
 
