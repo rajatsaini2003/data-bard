@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import AnalyticsNotebook from "@/components/AnalyticsNotebook";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
 import { useDatasetStore } from "@/store/datasetStore";
 import { useAuthStore } from "@/store/authStore";
 import { 
@@ -32,6 +34,7 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState("analyze");
   const [query, setQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
@@ -40,6 +43,7 @@ const Dashboard = () => {
   
   const { datasets, isLoading: datasetLoading, loadDatasets, uploadDataset } = useDatasetStore();
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -200,7 +204,7 @@ const Dashboard = () => {
           })}
         </div>
 
-        <Tabs defaultValue="analyze" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="analyze">AI Analysis</TabsTrigger>
             <TabsTrigger value="notebook">Notebook</TabsTrigger>
@@ -403,18 +407,22 @@ const Dashboard = () => {
             <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
               <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Button variant="dashboard" className="w-full justify-start">
+                <Button variant="dashboard" className="w-full justify-start" onClick={() => setActiveTab('dashboard')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Dashboard
                 </Button>
-                <Button variant="dashboard" className="w-full justify-start">
+                <Button variant="dashboard" className="w-full justify-start" onClick={() => navigate('/connections')}>
                   <Database className="h-4 w-4 mr-2" />
                   Connect Data Source
                 </Button>
-                <Button variant="dashboard" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  Invite Team Member
-                </Button>
+                <InviteMemberDialog
+                  trigger={
+                    <Button variant="dashboard" className="w-full justify-start">
+                      <Users className="h-4 w-4 mr-2" />
+                      Invite Team Member
+                    </Button>
+                  }
+                />
               </div>
             </Card>
           </div>

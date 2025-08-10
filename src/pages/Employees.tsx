@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
+import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
 import { 
   Users, 
   UserPlus, 
@@ -88,10 +89,14 @@ const Employees = () => {
             <h1 className="text-3xl font-bold mb-2">Team Members</h1>
             <p className="text-muted-foreground">Manage your organization's users and permissions</p>
           </div>
-          <Button variant="hero">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Invite Member
-          </Button>
+<InviteMemberDialog
+            trigger={
+              <Button variant="hero">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite Member
+              </Button>
+            }
+          />
         </div>
 
         {/* Stats */}
