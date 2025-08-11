@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Menu, X, Users, Database, MessageSquare, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuthStore();
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -50,14 +53,29 @@ const Navigation = () => {
             })}
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/auth">Sign In</Link>
-            </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/auth">Get Started</Link>
-            </Button>
-          </div>
+<div className="hidden md:flex items-center space-x-4">
+  {isAuthenticated ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        logout();
+        navigate("/auth");
+      }}
+    >
+      Logout
+    </Button>
+  ) : (
+    <>
+      <Button variant="outline" size="sm" asChild>
+        <Link to="/auth">Sign In</Link>
+      </Button>
+      <Button variant="hero" size="sm" asChild>
+        <Link to="/auth">Get Started</Link>
+      </Button>
+    </>
+  )}
+</div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
@@ -95,14 +113,30 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            <div className="pt-4 flex flex-col space-y-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/auth">Get Started</Link>
-              </Button>
-            </div>
+<div className="pt-4 flex flex-col space-y-2">
+  {isAuthenticated ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        logout();
+        setIsOpen(false);
+        navigate("/auth");
+      }}
+    >
+      Logout
+    </Button>
+  ) : (
+    <>
+      <Button variant="outline" size="sm" asChild>
+        <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
+      </Button>
+      <Button variant="hero" size="sm" asChild>
+        <Link to="/auth" onClick={() => setIsOpen(false)}>Get Started</Link>
+      </Button>
+    </>
+  )}
+</div>
           </div>
         </div>
       )}
