@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Building, Mail, Lock, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
 const Auth = () => {
@@ -22,6 +22,12 @@ const Auth = () => {
     description: ''
   });
 
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const inviteToken = searchParams.get('token');
+  const initialTab = inviteToken || location.pathname === '/signup' ? 'signup' : 'signin';
+  const [tab, setTab] = useState(initialTab);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -35,7 +41,7 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signup(signupData);
+      await signup({ ...signupData, invite_token: inviteToken || undefined });
       navigate('/dashboard');
     } catch (error) {
       // Error handled in store
@@ -59,7 +65,7 @@ const Auth = () => {
         </div>
 
         <Card className="p-8 bg-card/80 backdrop-blur-sm border-border shadow-card">
-          <Tabs defaultValue="signin" className="w-full">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -118,21 +124,28 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company Name</Label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="company"
-                      type="text"
-                      value={signupData.organization_name}
-                      onChange={(e) => setSignupData({...signupData, organization_name: e.target.value})}
-                      placeholder="Your company name"
-                      className="pl-10 bg-background/50"
-                      required
-                    />
+                {inviteToken && (
+                  <div className="p-3 rounded-md bg-primary/10 text-primary border border-primary/20 text-sm">
+                    You're joining via an invitation. Complete signup to accept.
                   </div>
-                </div>
+                )}
+                {!inviteToken && (
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company Name</Label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="company"
+                        type="text"
+                        value={signupData.organization_name}
+                        onChange={(e) => setSignupData({...signupData, organization_name: e.target.value})}
+                        placeholder="Your company name"
+                        className="pl-10 bg-background/50"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>

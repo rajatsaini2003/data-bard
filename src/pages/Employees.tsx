@@ -13,13 +13,17 @@ import {
   MoreVertical,
   Shield,
   BarChart3,
-  Eye
+  Eye,
+  Copy,
+  Trash2
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const employees = [
+  const [employees, setEmployees] = useState([
     {
       id: 1,
       name: "Sarah Chen",
@@ -64,7 +68,7 @@ const Employees = () => {
       dashboards: 15,
       queries: 201
     }
-  ];
+  ]);
 
   const roleColors = {
     Admin: "bg-primary/10 text-primary",
@@ -77,6 +81,38 @@ const Employees = () => {
     employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const { toast } = useToast();
+
+  const changeRole = (id: number, newRole: 'Admin' | 'Analyst' | 'Viewer') => {
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, role: newRole } : e));
+    toast({ title: 'Role updated', description: `Member role changed to ${newRole}.` });
+  };
+
+  const toggleStatus = (id: number) => {
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: e.status === 'active' ? 'inactive' : 'active' } : e));
+    toast({ title: 'Status updated', description: 'Member status has been updated.' });
+  };
+
+  const removeEmployee = (id: number) => {
+    if (window.confirm('Remove this member from the organization?')) {
+      setEmployees(prev => prev.filter(e => e.id !== id));
+      toast({ title: 'Member removed', description: 'The member has been removed.' });
+    }
+  };
+
+  const sendEmail = (email: string) => {
+    window.location.href = `mailto:${email}`;
+  };
+
+  const copyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      toast({ title: 'Email copied', description: email });
+    } catch {
+      toast({ title: 'Copy failed', description: 'Unable to copy email.', variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-dashboard">
@@ -206,9 +242,38 @@ const Employees = () => {
                       <p className="text-xs text-muted-foreground mt-1">{employee.lastActive}</p>
                     </div>
 
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => sendEmail(employee.email)}>
+                          <Mail className="h-4 w-4 mr-2" /> Send email
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => copyEmail(employee.email)}>
+                          <Copy className="h-4 w-4 mr-2" /> Copy email
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Admin')}>
+                          Make Admin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Analyst')}>
+                          Make Analyst
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Viewer')}>
+                          Make Viewer
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => toggleStatus(employee.id)}>
+                          {employee.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => removeEmployee(employee.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Remove from team
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}

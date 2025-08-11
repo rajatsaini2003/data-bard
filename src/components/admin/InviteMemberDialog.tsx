@@ -30,7 +30,15 @@ export function InviteMemberDialog({ trigger, onInvited }: InviteMemberDialogPro
     setLoading(true);
     try {
       const res = await apiService.admin.inviteUser({ email, role, message });
-      toast({ title: "Invitation sent", description: `Invite sent to ${email}` });
+      // If the API returns an invite token, show the link to copy
+      const inviteLink = res?.id ? `http://localhost:8080/signup?token=${res.id}` : undefined;
+      toast({ 
+        title: "Invitation sent", 
+        description: inviteLink ? `Invite link copied to clipboard` : `Invite sent to ${email}`
+      });
+      if (inviteLink) {
+        try { await navigator.clipboard.writeText(inviteLink); } catch {}
+      }
       onInvited?.(res);
       setOpen(false);
       setEmail("");
