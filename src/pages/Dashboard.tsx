@@ -411,7 +411,13 @@ const Dashboard = () => {
                   <Plus className="h-4 w-4 mr-2" />
                   Create Dashboard
                 </Button>
-                <Button variant="dashboard" className="w-full justify-start" onClick={() => navigate('/connections')}>
+                <Button variant="dashboard" className="w-full justify-start" onClick={() => {
+                  try {
+                    navigate('/connections');
+                  } catch (error) {
+                    console.error('Navigation error:', error);
+                  }
+                }}>
                   <Database className="h-4 w-4 mr-2" />
                   Connect Data Source
                 </Button>
