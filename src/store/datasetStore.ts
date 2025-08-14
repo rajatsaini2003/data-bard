@@ -50,10 +50,13 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
   },
 
   loadDatasets: async (params?: ListParams) => {
+    console.log('loadDatasets started with params:', params);
     set({ isLoading: true });
     try {
       const queryParams = { ...get().filters, ...params };
+      console.log('Calling apiService with params:', queryParams);
       const response = await apiService.datasets.list(queryParams);
+      console.log('API response received:', response);
       
       set({
         datasets: response.items,
@@ -66,7 +69,9 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
         filters: queryParams,
         isLoading: false
       });
+      console.log('loadDatasets completed successfully');
     } catch (error: any) {
+      console.error('loadDatasets failed:', error);
       set({ isLoading: false });
       toast({
         title: "Failed to load datasets",
@@ -77,25 +82,31 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
   },
 
   uploadDataset: async (file: File, metadata) => {
+    console.log('uploadDataset started for:', file.name);
     const uploadId = `${file.name}-${Date.now()}`;
     
     // Initialize upload progress
-    set(state => ({
-      uploads: {
-        ...state.uploads,
-        [uploadId]: {
-          file,
-          progress: 0,
-          status: 'uploading'
+    set(state => {
+      console.log('Setting upload state for:', uploadId);
+      return {
+        uploads: {
+          ...state.uploads,
+          [uploadId]: {
+            file,
+            progress: 0,
+            status: 'uploading'
+          }
         }
-      }
-    }));
+      };
+    });
 
     try {
+      console.log('Calling apiService.datasets.upload');
       const dataset = await apiService.datasets.upload(
         file,
         metadata,
         (progress) => {
+          console.log('Upload progress:', progress, 'for file:', file.name);
           set(state => ({
             uploads: {
               ...state.uploads,
@@ -108,6 +119,7 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
         }
       );
 
+      console.log('Upload successful, dataset:', dataset);
       // Update upload status to complete
       set(state => ({
         uploads: {
@@ -120,8 +132,10 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
         }
       }));
 
+      console.log('Reloading datasets...');
       // Reload datasets to include the new one
       await get().loadDatasets();
+      console.log('Datasets reloaded successfully');
 
       toast({
         title: "Upload successful",
@@ -129,6 +143,7 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
       });
 
     } catch (error: any) {
+      console.error('Upload failed with error:', error);
       set(state => ({
         uploads: {
           ...state.uploads,

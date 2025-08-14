@@ -87,17 +87,22 @@ const Dashboard = () => {
   ];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleFileUpload started');
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
 
+    console.log('Files selected:', files.length);
     try {
       for (const file of files) {
+        console.log('Processing file:', file.name, file.type);
         if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+          console.log('Starting upload for:', file.name);
           await uploadDataset(file, {
             name: file.name.replace('.csv', ''),
             description: `Uploaded dataset: ${file.name}`,
             tags: ['uploaded']
           });
+          console.log('Upload completed for:', file.name);
         } else {
           toast({
             title: "File type not supported",
@@ -111,8 +116,9 @@ const Dashboard = () => {
       if (event.target) {
         event.target.value = '';
       }
+      console.log('handleFileUpload completed successfully');
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Upload error in handleFileUpload:', error);
       toast({
         title: "Upload failed",
         description: "An error occurred while uploading files",
