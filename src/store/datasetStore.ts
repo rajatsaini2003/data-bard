@@ -59,7 +59,7 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
       console.log('API response received:', response);
       
       set({
-        datasets: response.items,
+        datasets: response.items || [],
         pagination: {
           total: response.total,
           page: response.page,

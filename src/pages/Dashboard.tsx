@@ -280,7 +280,7 @@ const Dashboard = () => {
                 />
               </div>
 
-              {datasets.length > 0 && (
+              {datasets && datasets.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <p className="text-sm font-medium">Your Datasets:</p>
                   {datasets.slice(0, 3).map((dataset, index) => (
@@ -297,7 +297,7 @@ const Dashboard = () => {
                       </Button>
                     </div>
                   ))}
-                  {datasets.length > 3 && (
+                  {datasets && datasets.length > 3 && (
                     <p className="text-xs text-muted-foreground text-center">
                       +{datasets.length - 3} more datasets
                     </p>
