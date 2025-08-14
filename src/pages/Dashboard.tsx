@@ -88,20 +88,36 @@ const Dashboard = () => {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    for (const file of files) {
-      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-        await uploadDataset(file, {
-          name: file.name.replace('.csv', ''),
-          description: `Uploaded dataset: ${file.name}`,
-          tags: ['uploaded']
-        });
-      } else {
-        toast({
-          title: "File type not supported",
-          description: "Please upload CSV files only",
-          variant: "destructive"
-        });
+    if (files.length === 0) return;
+
+    try {
+      for (const file of files) {
+        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+          await uploadDataset(file, {
+            name: file.name.replace('.csv', ''),
+            description: `Uploaded dataset: ${file.name}`,
+            tags: ['uploaded']
+          });
+        } else {
+          toast({
+            title: "File type not supported",
+            description: "Please upload CSV files only",
+            variant: "destructive"
+          });
+        }
       }
+      
+      // Reset file input
+      if (event.target) {
+        event.target.value = '';
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "An error occurred while uploading files",
+        variant: "destructive"
+      });
     }
   };
 
@@ -112,20 +128,31 @@ const Dashboard = () => {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    for (const file of files) {
-      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-        await uploadDataset(file, {
-          name: file.name.replace('.csv', ''),
-          description: `Uploaded dataset: ${file.name}`,
-          tags: ['uploaded']
-        });
-      } else {
-        toast({
-          title: "File type not supported",
-          description: "Please upload CSV files only",
-          variant: "destructive"
-        });
+    if (files.length === 0) return;
+
+    try {
+      for (const file of files) {
+        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+          await uploadDataset(file, {
+            name: file.name.replace('.csv', ''),
+            description: `Uploaded dataset: ${file.name}`,
+            tags: ['uploaded']
+          });
+        } else {
+          toast({
+            title: "File type not supported",
+            description: "Please upload CSV files only",
+            variant: "destructive"
+          });
+        }
       }
+    } catch (error) {
+      console.error('Drop upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "An error occurred while uploading files",
+        variant: "destructive"
+      });
     }
   };
 
