@@ -58,13 +58,16 @@ export const useDatasetStore = create<DatasetStore>((set, get) => ({
       const response = await apiService.datasets.list(queryParams);
       console.log('API response received:', response);
       
+      // Handle direct array response (not paginated)
+      const datasets = Array.isArray(response) ? response : response.items || [];
+      
       set({
-        datasets: response.items || [],
+        datasets,
         pagination: {
-          total: response.total,
-          page: response.page,
-          pageSize: response.page_size,
-          totalPages: response.total_pages
+          total: datasets.length,
+          page: 1,
+          pageSize: datasets.length,
+          totalPages: 1
         },
         filters: queryParams,
         isLoading: false
