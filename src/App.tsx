@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Settings from "./pages/Settings";
 import Queries from "./pages/Queries";
-import Connections from "./pages/Connections";
+import Datasets from "./pages/Datasets";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
@@ -30,7 +30,7 @@ const App = () => (
           <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/queries" element={<ProtectedRoute><Queries /></ProtectedRoute>} />
-          <Route path="/connections" element={<ProtectedRoute><Connections /></ProtectedRoute>} />
+          <Route path="/datasets" element={<ProtectedRoute><Datasets /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

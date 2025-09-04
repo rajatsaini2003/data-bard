@@ -13,7 +13,7 @@ const Navigation = () => {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/employees", label: "Employees", icon: Users },
-    { href: "/connections", label: "Connections", icon: Database },
+    { href: "/datasets", label: "Datasets", icon: Database },
     { href: "/queries", label: "AI Queries", icon: MessageSquare },
     { href: "/settings", label: "Settings", icon: Settings },
   ];

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import AnalyticsNotebook from "@/components/AnalyticsNotebook";
+import DynamicDashboard from "@/components/DynamicDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
@@ -174,7 +175,7 @@ const Dashboard = () => {
 
     setIsAnalyzing(true);
     
-    // Simulate AI analysis
+    // Simulate AI analysis with dashboard generation
     setTimeout(() => {
       setAnalysisResults({
         query: query,
@@ -189,9 +190,12 @@ const Dashboard = () => {
           { name: "Q2", value: 2800 },
           { name: "Q3", value: 3200 },
           { name: "Q4", value: 3600 }
-        ]
+        ],
+        dashboard: mockDashboardConfig
       });
       setIsAnalyzing(false);
+      // Auto-switch to dashboard tab when query completes
+      setActiveTab("dashboard");
     }, 2000);
   };
 
@@ -204,6 +208,53 @@ const Dashboard = () => {
     "Compare sales performance year over year",
     "Identify patterns in customer behavior data"
   ];
+
+  // Mock dashboard configuration as requested by user
+  const mockDashboardConfig = {
+    "layout": "minimal-reports",
+    "cards": [
+      "sales",
+      "revenue", 
+      "region"
+    ],
+    "filters": [
+      {
+        "label": "region",
+        "id": "region_1",
+        "type": "multichoice" as const
+      },
+      {
+        "label": "sales",
+        "id": "sales_1", 
+        "type": "slider" as const
+      }
+    ],
+    "alleys": [
+      {
+        "charts": [
+          {
+            "title": "Sales by Regions",
+            "type": "bar" as const,
+            "x": "Regions",
+            "y": "sales", 
+            "description": "Breakdown of Sales by Regions",
+            "color": "#3b82f6"
+          },
+          {
+            "title": "Revenue by Regions",
+            "type": "histogram" as const,
+            "x": "Regions",
+            "y": "Revenue",
+            "description": "Breakdown of Revenue by regions", 
+            "color": "#3b82f6"
+          }
+        ],
+        "title": "Alley 1"
+      }
+    ],
+    "include_table": true,
+    "theme": "light" as const
+  };
 
   return (
     <div className="min-h-screen bg-gradient-dashboard">
@@ -446,13 +497,13 @@ const Dashboard = () => {
                 </Button>
                 <Button variant="dashboard" className="w-full justify-start" onClick={() => {
                   try {
-                    navigate('/connections');
+                    navigate('/datasets');
                   } catch (error) {
                     console.error('Navigation error:', error);
                   }
                 }}>
                   <Database className="h-4 w-4 mr-2" />
-                  Connect Data Source
+                  Manage Datasets
                 </Button>
                 <InviteMemberDialog
                   trigger={
@@ -473,41 +524,10 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <Card key={index} className="p-6 bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 transition-all duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-2 rounded-lg bg-current/10 ${stat.color}`}>
-                        <Icon className={`h-6 w-6 ${stat.color}`} />
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">{stat.value}</p>
-                        <p className="text-sm text-success">{stat.change}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  </Card>
-                );
-              })}
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-                <h3 className="text-lg font-semibold mb-4">Revenue by Region</h3>
-                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="h-16 w-16 text-muted-foreground" />
-                </div>
-              </Card>
-              
-              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-                <h3 className="text-lg font-semibold mb-4">Customer Analytics</h3>
-                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
-                  <PieChart className="h-16 w-16 text-muted-foreground" />
-                </div>
-              </Card>
-            </div>
+            <DynamicDashboard 
+              data={mockDashboardConfig} 
+              chartData={[]} 
+            />
           </TabsContent>
         </Tabs>
       </div>
