@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
+import { useAuthStore } from "@/store/authStore";
 import { 
   Users, 
   UserPlus, 
@@ -22,6 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuthStore();
+  const isAdmin = user?.is_admin || false;
 
   const [employees, setEmployees] = useState([
     {
@@ -123,16 +126,18 @@ const Employees = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Team Members</h1>
-            <p className="text-muted-foreground">Manage your organization's users and permissions</p>
+            <p className="text-muted-foreground">{isAdmin ? "Manage your organization's users and permissions" : "View your organization's team members"}</p>
           </div>
-<InviteMemberDialog
-            trigger={
-              <Button variant="hero">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invite Member
-              </Button>
-            }
-          />
+          {isAdmin && (
+            <InviteMemberDialog
+              trigger={
+                <Button variant="hero">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Member
+                </Button>
+              }
+            />
+          )}
         </div>
 
         {/* Stats */}
@@ -255,23 +260,27 @@ const Employees = () => {
                         <DropdownMenuItem onClick={() => copyEmail(employee.email)}>
                           <Copy className="h-4 w-4 mr-2" /> Copy email
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Admin')}>
-                          Make Admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Analyst')}>
-                          Make Analyst
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => changeRole(employee.id, 'Viewer')}>
-                          Make Viewer
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => toggleStatus(employee.id)}>
-                          {employee.status === 'active' ? 'Deactivate' : 'Activate'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => removeEmployee(employee.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Remove from team
-                        </DropdownMenuItem>
+                        {isAdmin && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => changeRole(employee.id, 'Admin')}>
+                              Make Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => changeRole(employee.id, 'Analyst')}>
+                              Make Analyst
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => changeRole(employee.id, 'Viewer')}>
+                              Make Viewer
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => toggleStatus(employee.id)}>
+                              {employee.status === 'active' ? 'Deactivate' : 'Activate'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => removeEmployee(employee.id)}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Remove from team
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

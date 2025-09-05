@@ -299,63 +299,65 @@ const Dashboard = () => {
             <div className="grid lg:grid-cols-3 gap-8">
           {/* File Upload & AI Analysis */}
           <div className="lg:col-span-2 space-y-6">
-            {/* File Upload Section */}
-            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <FileUp className="h-5 w-5 mr-2 text-primary" />
-                  Upload Your Data
-                </h2>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  AI Ready
-                </Badge>
-              </div>
-              
-              <div 
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium mb-2">Drop your files here or click to upload</p>
-                <p className="text-sm text-muted-foreground">Supports CSV, Excel, JSON, and more</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".csv,.xlsx,.xls,.json,.txt"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </div>
-
-              {datasets && datasets.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Your Datasets:</p>
-                  {datasets.slice(0, 3).map((dataset, index) => (
-                    <div key={dataset.id} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{dataset.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {new Date(dataset.created_at).toLocaleDateString()}
-                        </Badge>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        View
-                      </Button>
-                    </div>
-                  ))}
-                  {datasets && datasets.length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      +{datasets.length - 3} more datasets
-                    </p>
-                  )}
+            {/* File Upload Section - Admin Only */}
+            {user?.is_admin && (
+              <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold flex items-center">
+                    <FileUp className="h-5 w-5 mr-2 text-primary" />
+                    Upload Your Data
+                  </h2>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    AI Ready
+                  </Badge>
                 </div>
-              )}
-            </Card>
+                
+                <div 
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-medium mb-2">Drop your files here or click to upload</p>
+                  <p className="text-sm text-muted-foreground">Supports CSV, Excel, JSON, and more</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".csv,.xlsx,.xls,.json,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {datasets && datasets.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium">Your Datasets:</p>
+                    {datasets.slice(0, 3).map((dataset, index) => (
+                      <div key={dataset.id} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{dataset.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {new Date(dataset.created_at).toLocaleDateString()}
+                          </Badge>
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                    {datasets && datasets.length > 3 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{datasets.length - 3} more datasets
+                      </p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
 
             {/* AI Analysis Section */}
             <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
