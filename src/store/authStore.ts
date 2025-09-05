@@ -26,6 +26,7 @@ interface AuthState {
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
+  signupEmployee: (data: { invite_token: string; full_name: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
   getCurrentUser: () => Promise<void>;
   clearError: () => void;
@@ -98,6 +99,41 @@ export const useAuthStore = create<AuthStore>()(
           });
         } catch (error: any) {
           const errorMessage = error.response?.data?.detail || 'Signup failed';
+          set({ 
+            error: errorMessage, 
+            isLoading: false 
+          });
+          
+          toast({
+            title: "Signup failed",
+            description: errorMessage,
+            variant: "destructive"
+          });
+          throw error;
+        }
+      },
+
+      signupEmployee: async (data: { invite_token: string; full_name: string; email: string; password: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiService.auth.employeeSignup(data);
+          
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token);
+          
+          set({
+            user: normalizeUser(response.user),
+            isAuthenticated: true,
+            isLoading: false,
+            error: null
+          });
+
+          toast({
+            title: "Welcome to the team!",
+            description: "Your account has been created successfully."
+          });
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.detail || 'Employee signup failed';
           set({ 
             error: errorMessage, 
             isLoading: false 

@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { login, signup, isLoading } = useAuthStore();
+  const { login, signup, signupEmployee, isLoading } = useAuthStore();
   
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ 
@@ -41,7 +41,18 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signup({ ...signupData, invite_token: inviteToken || undefined });
+      if (inviteToken) {
+        // Employee signup with invite token
+        await signupEmployee({ 
+          invite_token: inviteToken,
+          full_name: signupData.full_name,
+          email: signupData.email,
+          password: signupData.password
+        });
+      } else {
+        // Admin signup (new organization)
+        await signup(signupData);
+      }
       navigate('/dashboard');
     } catch (error) {
       // Error handled in store

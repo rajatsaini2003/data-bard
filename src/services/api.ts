@@ -78,6 +78,7 @@ class ApiService {
   auth = {
     login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
       const response = await this.client.post('/auth/login', credentials);
+      console.log('Login response:', response.data);
       return response.data;
     },
 
