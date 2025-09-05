@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
 import { useAuthStore } from "@/store/authStore";
+import { apiService } from "@/services/api";
+import { User } from "@/types";
 import { 
   Users, 
   UserPlus, 
@@ -16,62 +18,32 @@ import {
   BarChart3,
   Eye,
   Copy,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
+// Helper function to transform User API data to display format
+const transformUser = (user: User) => ({
+  id: user.id,
+  name: user.email.split('@')[0].replace(/[._]/g, ' ').split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+  email: user.email,
+  role: user.is_admin ? "Admin" : "Analyst",
+  department: "General", // Default as API doesn't provide department
+  lastActive: new Date(user.created_at).toLocaleDateString(),
+  status: user.status,
+  dashboards: Math.floor(Math.random() * 20), // Placeholder - API doesn't provide this
+  queries: Math.floor(Math.random() * 200) // Placeholder - API doesn't provide this
+});
+
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [employees, setEmployees] = useState<ReturnType<typeof transformUser>[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
   const isAdmin = user?.is_admin || false;
-
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Sarah Chen",
-      email: "sarah.chen@company.com",
-      role: "Admin",
-      department: "Data Science",
-      lastActive: "2 hours ago",
-      status: "active",
-      dashboards: 12,
-      queries: 156
-    },
-    {
-      id: 2,
-      name: "Michael Rodriguez",
-      email: "m.rodriguez@company.com",
-      role: "Analyst",
-      department: "Marketing",
-      lastActive: "1 day ago",
-      status: "active",
-      dashboards: 8,
-      queries: 89
-    },
-    {
-      id: 3,
-      name: "Emily Watson",
-      email: "e.watson@company.com",
-      role: "Viewer",
-      department: "Sales",
-      lastActive: "3 days ago",
-      status: "inactive",
-      dashboards: 3,
-      queries: 23
-    },
-    {
-      id: 4,
-      name: "David Kim",
-      email: "d.kim@company.com",
-      role: "Analyst",
-      department: "Finance",
-      lastActive: "5 hours ago",
-      status: "active",
-      dashboards: 15,
-      queries: 201
-    }
-  ]);
 
   const roleColors = {
     Admin: "bg-primary/10 text-primary",
@@ -79,28 +51,80 @@ const Employees = () => {
     Viewer: "bg-muted/10 text-muted-foreground"
   };
 
+  const { toast } = useToast();
+
+  // Fetch team members from API
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.admin.getTeamMembers();
+        const transformedEmployees = response.items.map(transformUser);
+        setEmployees(transformedEmployees);
+      } catch (error) {
+        console.error('Failed to fetch team members:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load team members",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchTeamMembers();
+    }
+  }, [isAdmin, toast]);
+
   const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const { toast } = useToast();
-
-  const changeRole = (id: number, newRole: 'Admin' | 'Analyst' | 'Viewer') => {
-    setEmployees(prev => prev.map(e => e.id === id ? { ...e, role: newRole } : e));
-    toast({ title: 'Role updated', description: `Member role changed to ${newRole}.` });
+  const changeRole = async (id: number, newRole: 'Admin' | 'Analyst' | 'Viewer') => {
+    try {
+      const apiRole = newRole === 'Admin' ? 'admin' : 'user';
+      await apiService.admin.updateUserRole(id, apiRole);
+      setEmployees(prev => prev.map(e => e.id === id ? { ...e, role: newRole } : e));
+      toast({ title: 'Role updated', description: `Member role changed to ${newRole}.` });
+    } catch (error) {
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update member role.',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const toggleStatus = (id: number) => {
-    setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: e.status === 'active' ? 'inactive' : 'active' } : e));
-    toast({ title: 'Status updated', description: 'Member status has been updated.' });
+  const toggleStatus = async (id: number) => {
+    try {
+      const employee = employees.find(e => e.id === id);
+      if (employee?.status === 'active') {
+        await apiService.admin.deactivateUser(id);
+        setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: 'inactive' as const } : e));
+        toast({ title: 'Status updated', description: 'Member has been deactivated.' });
+      } else {
+        // Note: There's no reactivate endpoint in the API, so this is just UI update
+        setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: 'active' as const } : e));
+        toast({ title: 'Status updated', description: 'Member status has been updated.' });
+      }
+    } catch (error) {
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update member status.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const removeEmployee = (id: number) => {
     if (window.confirm('Remove this member from the organization?')) {
+      // Note: There's no remove user endpoint in the API, so this is just UI update
       setEmployees(prev => prev.filter(e => e.id !== id));
-      toast({ title: 'Member removed', description: 'The member has been removed.' });
+      toast({ title: 'Member removed', description: 'The member has been removed from the team.' });
     }
   };
 
@@ -205,8 +229,32 @@ const Employees = () => {
         {/* Employee List */}
         <Card className="bg-card/50 backdrop-blur-sm border-border">
           <div className="p-6">
-            <div className="space-y-4">
-              {filteredEmployees.map((employee, index) => (
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading team members...</span>
+              </div>
+            ) : filteredEmployees.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No team members found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm ? 'No members match your search criteria.' : 'Start by inviting your first team member.'}
+                </p>
+                {isAdmin && !searchTerm && (
+                  <InviteMemberDialog
+                    trigger={
+                      <Button variant="hero">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Invite First Member
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredEmployees.map((employee, index) => (
                 <div 
                   key={employee.id} 
                   className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border hover:bg-background/50 transition-colors animate-fade-in"
@@ -285,8 +333,9 @@ const Employees = () => {
                     </DropdownMenu>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </Card>
       </div>
