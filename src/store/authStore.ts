@@ -4,6 +4,18 @@ import { User, LoginCredentials, SignupData } from '@/types';
 import { apiService } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
+// Normalize varying backend user shapes into our User type
+const normalizeUser = (u: any): import('@/types').User => ({
+  id: u?.id ?? 0,
+  email: u?.email ?? '',
+  // Accept multiple shapes: is_admin, isAdmin, role === 'admin'
+  is_admin: Boolean(u?.is_admin ?? u?.isAdmin ?? (typeof u?.role === 'string' && u.role.toLowerCase() === 'admin')),
+  organization_id: u?.organization_id ?? u?.organizationId ?? u?.org_id ?? 0,
+  organization_name: u?.organization_name ?? u?.organizationName,
+  created_at: u?.created_at ?? u?.createdAt ?? new Date().toISOString(),
+  status: (u?.status as any) ?? 'active',
+});
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -38,7 +50,7 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.setItem('refresh_token', response.refresh_token);
           
           set({
-            user: response.user,
+            user: normalizeUser(response.user),
             isAuthenticated: true,
             isLoading: false,
             error: null
@@ -74,7 +86,7 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.setItem('refresh_token', response.refresh_token);
           
           set({
-            user: response.user,
+            user: normalizeUser(response.user),
             isAuthenticated: true,
             isLoading: false,
             error: null
@@ -128,7 +140,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const user = await apiService.auth.getCurrentUser();
           set({
-            user,
+            user: normalizeUser(user),
             isAuthenticated: true,
             isLoading: false,
             error: null
