@@ -102,15 +102,11 @@ const Employees = () => {
   const toggleStatus = async (id: number) => {
     try {
       const employee = employees.find(e => e.id === id);
-      if (employee?.status === 'active') {
+      
         await apiService.admin.deactivateUser(id);
         setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: 'inactive' as const } : e));
         toast({ title: 'Status updated', description: 'Member has been deactivated.' });
-      } else {
-        // Note: There's no reactivate endpoint in the API, so this is just UI update
-        setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: 'active' as const } : e));
-        toast({ title: 'Status updated', description: 'Member status has been updated.' });
-      }
+      
     } catch (error) {
       toast({ 
         title: 'Error', 
