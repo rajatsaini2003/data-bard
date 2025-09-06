@@ -9,6 +9,7 @@ import Navigation from "@/components/Navigation";
 import { useDatasetStore } from "@/store/datasetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
+import { apiService } from "@/services/api";
 import { 
   Database, 
   Plus, 
@@ -86,20 +87,17 @@ const Datasets = () => {
 
   const viewDatasetSchema = async (datasetId: number) => {
     try {
-      // Mock schema data since API endpoint doesn't exist yet
-      const mockSchema = {
-        columns: [
-          { name: "id", type: "INTEGER", nullable: false, primary: true },
-          { name: "name", type: "VARCHAR(255)", nullable: false, primary: false },
-          { name: "email", type: "VARCHAR(255)", nullable: true, primary: false },
-          { name: "created_at", type: "TIMESTAMP", nullable: false, primary: false },
-          { name: "updated_at", type: "TIMESTAMP", nullable: true, primary: false }
-        ],
-        rowCount: 1000,
-        size: "2.4 MB"
-      };
-      
-      setDatasetSchema(mockSchema);
+      const preview = await apiService.datasets.getPreview(datasetId, 1, 10);
+      setDatasetSchema({
+        columns: preview.columns.map(col => ({
+          name: col.name,
+          type: col.type,
+          nullable: col.nullable,
+          primary: false // API doesn't provide primary key info
+        })),
+        rowCount: preview.total_rows,
+        size: "Unknown" // Size not provided in preview API
+      });
       const dataset = datasets?.find(d => d.id === datasetId);
       setSelectedDataset(dataset);
     } catch (error) {
@@ -121,11 +119,21 @@ const Datasets = () => {
       return;
     }
 
-    // Mock mapping creation
-    toast({
-      title: "Mapping created successfully",
-      description: "Dataset relationships have been analyzed and mapped"
-    });
+    try {
+      // Get mapping for the first dataset as an example
+      const firstDataset = datasets[0];
+      await apiService.datasets.getMapping(firstDataset.id);
+      toast({
+        title: "Mapping loaded successfully",
+        description: "Dataset relationships have been loaded"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load dataset mapping",
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredDatasets = datasets?.filter(dataset =>

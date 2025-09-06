@@ -53,7 +53,22 @@ interface DynamicDashboardProps {
   chartData: any[];
 }
 
-// Mock chart data for different visualizations
+// Use actual chart data passed from props, with fallback for demo
+const getChartData = (chartData: any[], type: string) => {
+  if (chartData && chartData.length > 0) {
+    return chartData;
+  }
+  
+  // Fallback demo data for query processing visualization
+  return [
+    { name: "Q1", value: 2400 },
+    { name: "Q2", value: 2800 },
+    { name: "Q3", value: 3200 },
+    { name: "Q4", value: 3600 }
+  ];
+};
+
+// Keep existing mock data for tables and other components
 const mockChartData = {
   sales: [
     { name: "North America", sales: 4500, revenue: 120000 },
@@ -74,7 +89,7 @@ const mockChartData = {
 
 const DynamicDashboard = ({ data, chartData }: DynamicDashboardProps) => {
   const renderChart = (chart: ChartConfig, index: number) => {
-    const chartDataToUse = mockChartData.sales; // Default data
+    const chartDataToUse = getChartData(chartData, chart.type);
 
     const chartConfig = {
       [chart.y]: {
@@ -118,14 +133,14 @@ const DynamicDashboard = ({ data, chartData }: DynamicDashboardProps) => {
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <LineChart data={mockChartData.revenue}>
+                <LineChart data={chartDataToUse}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="name" />
                   <YAxis />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line 
                     type="monotone" 
-                    dataKey={chart.y.toLowerCase()} 
+                    dataKey="value" 
                     stroke={chart.color}
                     strokeWidth={3}
                     dot={{ fill: chart.color, r: 6 }}
@@ -287,11 +302,11 @@ const DynamicDashboard = ({ data, chartData }: DynamicDashboardProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockChartData.sales.map((row, index) => (
+              {getChartData([], 'table').slice(0, 6).map((row, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell>{row.sales.toLocaleString()}</TableCell>
-                  <TableCell>${row.revenue.toLocaleString()}</TableCell>
+                  <TableCell>{row.value?.toLocaleString() || 'N/A'}</TableCell>
+                  <TableCell>{row.value ? `$${row.value.toLocaleString()}` : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-success/10 text-success">
                       +{(Math.random() * 20 + 5).toFixed(1)}%
