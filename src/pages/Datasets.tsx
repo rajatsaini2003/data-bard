@@ -141,11 +141,47 @@ const Datasets = () => {
     (dataset.description && dataset.description.toLowerCase().includes(searchTerm.toLowerCase()))
   ) || [];
 
+  // Calculate stats from actual data
+  const totalRecords = datasets?.reduce((sum, dataset) => sum + (dataset.row_count || 0), 0) || 0;
+  const totalStorage = datasets?.reduce((sum, dataset) => sum + (dataset.file_size || 0), 0) || 0;
+  const lastDataset = datasets?.reduce((latest, current) => 
+    new Date(current.created_at) > new Date(latest?.created_at || '') ? current : latest, 
+    datasets[0]
+  );
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
   const stats = [
     { label: "Total Datasets", value: datasets?.length || 0, icon: Database },
-    { label: "Total Records", value: "45.2K", icon: FileText },
-    { label: "Storage Used", value: "128 MB", icon: Upload },
-    { label: "Last Updated", value: "2 min ago", icon: Calendar },
+    { label: "Total Records", value: formatNumber(totalRecords), icon: FileText },
+    { label: "Storage Used", value: formatBytes(totalStorage), icon: Upload },
+    { label: "Last Updated", value: lastDataset ? getRelativeTime(lastDataset.created_at) : 'No data', icon: Calendar },
   ];
 
   return (
@@ -376,40 +412,42 @@ const Datasets = () => {
                   </div>
                 </div>
                 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Column</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Nullable</TableHead>
-                      <TableHead>Primary Key</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {datasetSchema.columns.map((column: any, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{column.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{column.type}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {column.nullable ? (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Yes</Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-red-50 text-red-700">No</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {column.primary ? (
-                            <Badge className="bg-primary/10 text-primary">Yes</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">No</span>
-                          )}
-                        </TableCell>
+                <div className="max-h-96 overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background">
+                      <TableRow>
+                        <TableHead>Column</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Nullable</TableHead>
+                        <TableHead>Primary Key</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {datasetSchema.columns.map((column: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{column.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{column.type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {column.nullable ? (
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Yes</Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-red-50 text-red-700">No</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {column.primary ? (
+                              <Badge className="bg-primary/10 text-primary">Yes</Badge>
+                            ) : (
+                              <span className="text-muted-foreground">No</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </DialogContent>
           </Dialog>

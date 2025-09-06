@@ -7,7 +7,7 @@ import Navigation from "@/components/Navigation";
 import { InviteMemberDialog } from "@/components/admin/InviteMemberDialog";
 import { useAuthStore } from "@/store/authStore";
 import { apiService } from "@/services/api";
-import { User } from "@/types";
+import { User, InviteResponse } from "@/types";
 import { 
   Users, 
   UserPlus, 
@@ -33,14 +33,13 @@ const transformUser = (user: User) => ({
   role: user.is_admin ? "Admin" : "Analyst",
   department: "General", // Default as API doesn't provide department
   lastActive: new Date(user.created_at).toLocaleDateString(),
-  status: user.status,
-  dashboards: Math.floor(Math.random() * 20), // Placeholder - API doesn't provide this
-  queries: Math.floor(Math.random() * 200) // Placeholder - API doesn't provide this
+  status: user.status
 });
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [employees, setEmployees] = useState<ReturnType<typeof transformUser>[]>([]);
+  const [invites, setInvites] = useState<InviteResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
   const isAdmin = user?.is_admin || false;
@@ -53,14 +52,27 @@ const Employees = () => {
 
   const { toast } = useToast();
 
-  // Fetch team members from API
+  // Fetch team members and invites from API
   useEffect(() => {
-    const fetchTeamMembers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiService.admin.getTeamMembers();
-        const transformedEmployees = response.items.map(transformUser);
+        
+        // Fetch team members (available to all users)
+        const teamResponse = await apiService.admin.getTeamMembers();
+        const transformedEmployees = teamResponse.items.map(transformUser);
         setEmployees(transformedEmployees);
+
+        // Fetch pending invites (only for admins)
+        if (isAdmin) {
+          try {
+            const invitesResponse = await apiService.admin.getPendingInvites();
+            setInvites(invitesResponse);
+          } catch (inviteError) {
+            console.error('Failed to fetch invites:', inviteError);
+            // Don't show error for invites since it's secondary data
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch team members:', error);
         toast({
@@ -73,9 +85,7 @@ const Employees = () => {
       }
     };
 
-    if (isAdmin) {
-      fetchTeamMembers();
-    }
+    fetchData();
   }, [isAdmin, toast]);
 
   const filteredEmployees = employees.filter(employee =>
@@ -137,6 +147,33 @@ const Employees = () => {
     }
   };
 
+  const resendInvite = async (inviteId: number) => {
+    try {
+      await apiService.admin.resendInvite(inviteId);
+      toast({ title: 'Invite resent', description: 'Invitation has been sent again.' });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to resend invitation.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const cancelInvite = async (inviteId: number) => {
+    try {
+      await apiService.admin.cancelInvite(inviteId);
+      setInvites(prev => prev.filter(invite => invite.id !== inviteId));
+      toast({ title: 'Invite cancelled', description: 'The invitation has been cancelled.' });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel invitation.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-dashboard">
       <Navigation />
@@ -161,7 +198,7 @@ const Employees = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
             <div className="flex items-center justify-between">
               <div>
@@ -182,25 +219,17 @@ const Employees = () => {
             </div>
           </Card>
           
-          <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Dashboards</p>
-                <p className="text-2xl font-bold">{employees.reduce((sum, e) => sum + e.dashboards, 0)}</p>
+          {isAdmin && (
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Invites</p>
+                  <p className="text-2xl font-bold">{invites.length}</p>
+                </div>
+                <UserPlus className="h-8 w-8 text-accent-blue" />
               </div>
-              <BarChart3 className="h-8 w-8 text-accent-blue" />
-            </div>
-          </Card>
-          
-          <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Queries</p>
-                <p className="text-2xl font-bold">{employees.reduce((sum, e) => sum + e.queries, 0)}</p>
-              </div>
-              <Eye className="h-8 w-8 text-accent-purple" />
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -273,17 +302,7 @@ const Employees = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-6">
-                    <div className="text-center">
-                      <p className="text-sm font-semibold">{employee.dashboards}</p>
-                      <p className="text-xs text-muted-foreground">Dashboards</p>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-sm font-semibold">{employee.queries}</p>
-                      <p className="text-xs text-muted-foreground">Queries</p>
-                    </div>
-                    
+                  <div className="flex items-center space-x-6">                    
                     <div className="text-center">
                       <Badge className={roleColors[employee.role as keyof typeof roleColors]}>
                         {employee.role}
@@ -334,6 +353,67 @@ const Employees = () => {
             )}
           </div>
         </Card>
+
+        {/* Pending Invites Section (Admin Only) */}
+        {isAdmin && invites.length > 0 && (
+          <Card className="bg-card/50 backdrop-blur-sm border-border mt-6">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Pending Invites</h3>
+              <div className="space-y-4">
+                {invites.map((invite) => (
+                  <div 
+                    key={invite.id} 
+                    className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                        <UserPlus className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-semibold">{invite.email}</h3>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <span>Invited as {invite.role}</span>
+                          <span>•</span>
+                          <span>Expires {new Date(invite.expires_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+                        {invite.status}
+                      </Badge>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => resendInvite(invite.id)}>
+                            <Mail className="h-4 w-4 mr-2" /> Resend invite
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => copyEmail(invite.email)}>
+                            <Copy className="h-4 w-4 mr-2" /> Copy email
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive" 
+                            onClick={() => cancelInvite(invite.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Cancel invite
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
