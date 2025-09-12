@@ -8,7 +8,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Settings from "./pages/Settings";
-import Queries from "./pages/Queries";
+// import Queries from "./pages/Queries"; // Removed as requested
 import Datasets from "./pages/Datasets";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -39,7 +39,7 @@ const App = () => {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/queries" element={<ProtectedRoute><Queries /></ProtectedRoute>} />
+            {/* <Route path="/queries" element={<ProtectedRoute><Queries /></ProtectedRoute>} /> */}
             <Route path="/datasets" element={<ProtectedRoute><Datasets /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
