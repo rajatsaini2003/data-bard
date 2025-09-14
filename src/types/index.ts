@@ -60,10 +60,19 @@ export interface Relationship {
 
 export interface ColumnInfo {
   name: string;
-  type: string;
+  dtype: string;
+  pandas_dtype: string;
   nullable: boolean;
-  unique_values: number;
-  sample_values: string[];
+  position: number;
+}
+
+export interface TableSchema {
+  table_name: string;
+  columns: ColumnInfo[];
+}
+
+export interface DatasetSchema {
+  schemas: Record<string, TableSchema>;
 }
 
 export interface DataPreview {

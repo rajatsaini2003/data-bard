@@ -87,18 +87,19 @@ const Datasets = () => {
 
   const viewDatasetSchema = async (datasetId: number) => {
     try {
-      const preview = await apiService.datasets.getPreview(datasetId, 1, 10);
-      setDatasetSchema({
-        columns: preview.columns.map(col => ({
-          name: col.name,
-          type: col.type,
-          nullable: col.nullable,
-          primary: false // API doesn't provide primary key info
-        })),
-        rowCount: preview.total_rows,
-        size: "Unknown" // Size not provided in preview API
-      });
+      const schemaData = await apiService.datasets.getSchema(datasetId);
       const dataset = datasets?.find(d => d.id === datasetId);
+      
+      // Get the first table schema (assuming single table per dataset for now)
+      const firstTableKey = Object.keys(schemaData.schemas)[0];
+      const tableSchema = schemaData.schemas[firstTableKey];
+      
+      setDatasetSchema({
+        tableName: tableSchema.table_name,
+        columns: tableSchema.columns.sort((a, b) => a.position - b.position),
+        rowCount: dataset?.row_count || 0,
+        size: formatBytes(dataset?.file_size || 0)
+      });
       setSelectedDataset(dataset);
     } catch (error) {
       toast({
@@ -416,31 +417,29 @@ const Datasets = () => {
                   <Table>
                     <TableHeader className="sticky top-0 bg-background">
                       <TableRow>
+                        <TableHead>Position</TableHead>
                         <TableHead>Column</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead>Data Type</TableHead>
+                        <TableHead>Pandas Type</TableHead>
                         <TableHead>Nullable</TableHead>
-                        <TableHead>Primary Key</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {datasetSchema.columns.map((column: any, index: number) => (
+                      {datasetSchema.columns.map((column, index) => (
                         <TableRow key={index}>
+                          <TableCell className="font-medium">{column.position}</TableCell>
                           <TableCell className="font-medium">{column.name}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{column.type}</Badge>
+                            <Badge variant="outline">{column.dtype}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{column.pandas_dtype}</Badge>
                           </TableCell>
                           <TableCell>
                             {column.nullable ? (
-                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Yes</Badge>
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Yes</Badge>
                             ) : (
-                              <Badge variant="outline" className="bg-red-50 text-red-700">No</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {column.primary ? (
-                              <Badge className="bg-primary/10 text-primary">Yes</Badge>
-                            ) : (
-                              <span className="text-muted-foreground">No</span>
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">No</Badge>
                             )}
                           </TableCell>
                         </TableRow>

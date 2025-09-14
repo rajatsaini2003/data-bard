@@ -4,6 +4,7 @@ import {
   Dataset,
   DataMapping,
   DataPreview,
+  DatasetSchema,
   LoginCredentials,
   SignupData,
   AuthResponse,
@@ -157,9 +158,14 @@ class ApiService {
     },
 
     getPreview: async (id: number, page = 1, pageSize = 50): Promise<DataPreview> => {
-      const response = await this.client.get(`/datasets/${id}/schema`, {
+      const response = await this.client.get(`/datasets/${id}/preview`, {
         params: { page, page_size: pageSize }
       });
+      return response.data;
+    },
+
+    getSchema: async (id: number): Promise<DatasetSchema> => {
+      const response = await this.client.get(`/datasets/${id}/schema`);
       return response.data;
     },
 
