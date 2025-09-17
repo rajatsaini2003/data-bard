@@ -68,24 +68,7 @@ const getChartData = (chartData: any[], type: string) => {
   ];
 };
 
-// Keep existing mock data for tables and other components
-const mockChartData = {
-  sales: [
-    { name: "North America", sales: 4500, revenue: 120000 },
-    { name: "Europe", sales: 3800, revenue: 98000 },
-    { name: "Asia", sales: 5200, revenue: 145000 },
-    { name: "South America", sales: 2100, revenue: 55000 },
-    { name: "Africa", sales: 1800, revenue: 42000 },
-  ],
-  revenue: [
-    { month: "Jan", revenue: 65000, sales: 2400 },
-    { month: "Feb", revenue: 78000, sales: 2800 },
-    { month: "Mar", revenue: 92000, sales: 3200 },
-    { month: "Apr", revenue: 88000, sales: 3100 },
-    { month: "May", revenue: 105000, sales: 3600 },
-    { month: "Jun", revenue: 125000, sales: 4200 },
-  ]
-};
+
 
 const DynamicDashboard = ({ data, chartData }: DynamicDashboardProps) => {
   const renderChart = (chart: ChartConfig, index: number) => {

@@ -14,7 +14,12 @@ import {
   ListParams,
   Organization,
   AuditLog,
-  NotificationData
+  NotificationData,
+  OrganizationMapping,
+  MappingGenerateRequest,
+  MappingGenerateResponse,
+  QueryRequest,
+  DashboardResponse
 } from '@/types';
 
 class ApiService {
@@ -265,6 +270,27 @@ class ApiService {
 
     markAllAsRead: async (): Promise<void> => {
       await this.client.put('/notifications/read-all');
+    }
+  };
+
+  // Mappings endpoints
+  mappings = {
+    generate: async (data: MappingGenerateRequest = {}): Promise<MappingGenerateResponse> => {
+      const response = await this.client.post('/mappings/generate', data);
+      return response.data;
+    },
+
+    get: async (): Promise<OrganizationMapping> => {
+      const response = await this.client.get('/mappings/');
+      return response.data;
+    }
+  };
+
+  // Query endpoints
+  query = {
+    submit: async (data: QueryRequest): Promise<DashboardResponse> => {
+      const response = await this.client.post('/query/', data);
+      return response.data;
     }
   };
 }

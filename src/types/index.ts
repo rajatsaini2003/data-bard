@@ -162,3 +162,125 @@ export interface AuditLog {
   timestamp: string;
   ip_address: string;
 }
+
+// Mapping interfaces
+export interface OrganizationMapping {
+  id: number;
+  organization_id: number;
+  mapping_data: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  status: 'generating' | 'ready' | 'error';
+}
+
+export interface MappingGenerateRequest {
+  force_regenerate?: boolean;
+}
+
+export interface MappingGenerateResponse {
+  message: string;
+  mapping_id: number;
+  status: 'started' | 'completed' | 'error';
+}
+
+// Dashboard query interfaces
+export interface QueryRequest {
+  query: string;
+  context?: Record<string, unknown>;
+}
+
+// Dashboard response types
+export interface DashboardFilter {
+  field: string;
+  type: 'dropdown' | 'date-range' | 'multi-select' | 'search';
+  options?: string[];
+  label?: string;
+}
+
+export interface DashboardCard {
+  id: string;
+  title: string;
+  valueField: string;
+  aggregation: 'sum' | 'avg' | 'count' | 'min' | 'max';
+  format?: 'currency' | 'percentage' | 'number';
+  change?: string;
+  trend?: 'up' | 'down' | 'stable';
+  variant?: string;
+  comparison?: string;
+  tooltip?: {
+    title?: string;
+    content?: string;
+  } | string;
+}
+
+export interface ChartSeries {
+  name: string;
+  field: string;
+  type: 'bar' | 'line' | 'pie' | 'scatter' | 'heatmap';
+}
+
+export interface ChartTooltipContent {
+  label: string;
+  valueField: string;
+}
+
+export interface ChartTooltip {
+  enabled: boolean;
+  content: ChartTooltipContent[];
+}
+
+export interface DashboardChart {
+  id: string;
+  type: 'bar' | 'line' | 'pie' | 'scatter' | 'heatmap' | 'dual-axis-line';
+  title: string;
+  xAxis: string;
+  yAxis: string;
+  series: ChartSeries[];
+  data?: Record<string, unknown>[]; // For pie charts with predefined data
+  tooltip?: ChartTooltip;
+}
+
+export interface TableColumn {
+  field: string;
+  header?: string;
+  label?: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  type?: 'text' | 'number' | 'currency' | 'date' | 'percentage';
+  format?: string;
+}
+
+export interface TablePagination {
+  enabled: boolean;
+  pageSize: number;
+}
+
+export interface TableSearch {
+  enabled: boolean;
+  placeholder?: string;
+}
+
+export interface DashboardTable {
+  id: string;
+  title?: string;
+  columns: TableColumn[];
+  pagination?: TablePagination;
+  search?: TableSearch;
+  tooltip?: string;
+}
+
+export interface DashboardData {
+  template: string;
+  title: string;
+  description?: string;
+  data: Record<string, unknown>[];
+  filters: DashboardFilter[];
+  cards: DashboardCard[];
+  charts: DashboardChart[];
+  table?: DashboardTable;
+  tables?: DashboardTable[];
+}
+
+export interface DashboardResponse {
+  data: DashboardData;
+}

@@ -5,16 +5,19 @@ import { apiService } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 // Normalize varying backend user shapes into our User type
-const normalizeUser = (u: any): import('@/types').User => ({
-  id: u?.id ?? 0,
-  email: u?.email ?? '',
-  // Accept multiple shapes: is_admin, isAdmin, role === 'admin'
-  is_admin: Boolean(u?.is_admin ?? u?.isAdmin ?? (typeof u?.role === 'string' && u.role.toLowerCase() === 'admin')),
-  organization_id: u?.organization_id ?? u?.organizationId ?? u?.org_id ?? 0,
-  organization_name: u?.organization_name ?? u?.organizationName,
-  created_at: u?.created_at ?? u?.createdAt ?? new Date().toISOString(),
-  status: (u?.status as any) ?? 'active',
-});
+const normalizeUser = (u: unknown): import('@/types').User => {
+  const user = u as Record<string, unknown>;
+  return {
+    id: user?.id as number ?? 0,
+    email: user?.email as string ?? '',
+    // Accept multiple shapes: is_admin, isAdmin, role === 'admin'
+    is_admin: Boolean(user?.is_admin ?? user?.isAdmin ?? (typeof user?.role === 'string' && user.role.toLowerCase() === 'admin')),
+    organization_id: user?.organization_id as number ?? user?.organizationId as number ?? user?.org_id as number ?? 0,
+    organization_name: user?.organization_name as string ?? user?.organizationName as string,
+    created_at: user?.created_at as string ?? user?.createdAt as string ?? new Date().toISOString(),
+    status: (user?.status as 'active' | 'pending' | 'inactive') ?? 'active',
+  };
+};
 
 interface AuthState {
   user: User | null;
@@ -61,8 +64,9 @@ export const useAuthStore = create<AuthStore>()(
             title: "Welcome back!",
             description: "You have been successfully logged in."
           });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.detail || 'Login failed';
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { detail?: string } } };
+          const errorMessage = err.response?.data?.detail || 'Login failed';
           set({ 
             error: errorMessage, 
             isLoading: false,
@@ -81,7 +85,24 @@ export const useAuthStore = create<AuthStore>()(
       signup: async (data: SignupData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiService.auth.adminSignup(data);
+          let response;
+          
+          // Check if this is an employee signup (has invite_token) or admin signup
+          if (data.invite_token) {
+            // Employee signup
+            response = await apiService.auth.employeeSignup({
+              invite_token: data.invite_token,
+              full_name: data.full_name || '',
+              email: data.email,
+              password: data.password
+            });
+          } else {
+            // Admin signup - requires organization_name
+            if (!data.organization_name) {
+              throw new Error('Organization name is required for admin signup');
+            }
+            response = await apiService.auth.adminSignup(data);
+          }
           
           localStorage.setItem('access_token', response.access_token);
           localStorage.setItem('refresh_token', response.refresh_token);
@@ -94,11 +115,12 @@ export const useAuthStore = create<AuthStore>()(
           });
 
           toast({
-            title: "Account created!",
-            description: "Welcome to DataFlow AI."
+            title: data.invite_token ? "Welcome to the team!" : "Account created!",
+            description: data.invite_token ? "You have successfully joined the organization." : "Welcome to DataFlow AI."
           });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.detail || 'Signup failed';
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { detail?: string } }; message?: string };
+          const errorMessage = err.response?.data?.detail || err.message || 'Signup failed';
           set({ 
             error: errorMessage, 
             isLoading: false 
@@ -132,8 +154,9 @@ export const useAuthStore = create<AuthStore>()(
             title: "Welcome to the team!",
             description: "Your account has been created successfully."
           });
-        } catch (error: any) {
-          const errorMessage = error.response?.data?.detail || 'Employee signup failed';
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { detail?: string } }; message?: string };
+          const errorMessage = err.response?.data?.detail || err.message || 'Employee signup failed';
           set({ 
             error: errorMessage, 
             isLoading: false 

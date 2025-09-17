@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Navigation from "@/components/Navigation";
+import MappingDisplay from "@/components/datasets/MappingDisplay";
 import { useDatasetStore } from "@/store/datasetStore";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
@@ -271,6 +272,11 @@ const Datasets = () => {
               </Card>
             );
           })}
+        </div>
+
+        {/* Organization Mapping */}
+        <div className="mb-8">
+          <MappingDisplay />
         </div>
 
         {/* Search and Filters */}

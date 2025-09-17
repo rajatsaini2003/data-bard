@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
-import DynamicDashboard from "@/components/DynamicDashboard";
+import DynamicDashboard from "@/components/dashboard/DynamicDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("analyze");
   const [query, setQuery] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [analysisResults, setAnalysisResults] = useState<{ query: string; insights: string[] } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -36,19 +36,18 @@ const Dashboard = () => {
 
     setIsAnalyzing(true);
     
-    // Simulate AI analysis with dashboard generation - returns JSON for dashboard
+    // Simulate AI analysis
     setTimeout(() => {
-      const dashboardJson = {
+      const results = {
         query: query,
         insights: [
           "Revenue increased 15% compared to last quarter",
           "Top performing region is North America with 45% of total sales", 
           "Customer retention rate improved by 8%"
-        ],
-        dashboard: mockDashboardConfig
+        ]
       };
       
-      setAnalysisResults(dashboardJson);
+      setAnalysisResults(results);
       setIsAnalyzing(false);
       // Auto-switch to dashboard tab when query completes
       setActiveTab("dashboard");
@@ -63,53 +62,6 @@ const Dashboard = () => {
     "Compare sales performance year over year",
     "Identify patterns in customer behavior data"
   ];
-
-  // Mock dashboard configuration - JSON structure for dashboard generation
-  const mockDashboardConfig = {
-    "layout": "minimal-reports",
-    "cards": [
-      "sales",
-      "revenue", 
-      "region"
-    ],
-    "filters": [
-      {
-        "label": "region",
-        "id": "region_1",
-        "type": "multichoice" as const
-      },
-      {
-        "label": "sales",
-        "id": "sales_1", 
-        "type": "slider" as const
-      }
-    ],
-    "alleys": [
-      {
-        "charts": [
-          {
-            "title": "Sales by Regions",
-            "type": "bar" as const,
-            "x": "Regions",
-            "y": "sales", 
-            "description": "Breakdown of Sales by Regions",
-            "color": "#3b82f6"
-          },
-          {
-            "title": "Revenue by Regions",
-            "type": "histogram" as const,
-            "x": "Regions",
-            "y": "Revenue",
-            "description": "Breakdown of Revenue by regions", 
-            "color": "#3b82f6"
-          }
-        ],
-        "title": "Alley 1"
-      }
-    ],
-    "include_table": true,
-    "theme": "light" as const
-  };
 
   return (
     <div className="min-h-screen bg-gradient-dashboard">
@@ -233,10 +185,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="dashboard">
-            <DynamicDashboard 
-              data={mockDashboardConfig} 
-              chartData={[]} 
-            />
+            <DynamicDashboard />
           </TabsContent>
         </Tabs>
       </div>
