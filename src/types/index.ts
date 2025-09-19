@@ -164,13 +164,47 @@ export interface AuditLog {
 }
 
 // Mapping interfaces
+export interface PrimaryKey {
+  table: string;
+  column: string;
+  confidence: number;
+  null_count: number;
+  uniqueness_ratio: number;
+}
+
+export interface ForeignKey {
+  source_table: string;
+  source_column: string;
+  target_table: string;
+  target_column: string;
+  confidence: number;
+}
+
+export interface CompositeKey {
+  table: string;
+  columns: string[];
+  confidence: number;
+}
+
+export interface MappingData {
+  table_count: number;
+  foreign_keys: ForeignKey[];
+  generated_at: string;
+  primary_keys: PrimaryKey[];
+}
+
 export interface OrganizationMapping {
   id: number;
   organization_id: number;
-  mapping_data: Record<string, unknown>;
+  mapping_data: MappingData;
+  primary_keys: PrimaryKey[];
+  foreign_keys: ForeignKey[];
+  composite_keys: CompositeKey[];
+  table_count: number;
+  version: string;
+  confidence_score: number;
+  generated_at: string;
   created_at: string;
-  updated_at: string;
-  status: 'generating' | 'ready' | 'error';
 }
 
 export interface MappingGenerateRequest {

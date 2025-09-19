@@ -24,13 +24,23 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
 
     // Process data based on chart type
     if (chart.type === 'pie') {
-      // Group data by xAxis field and sum yAxis values
+      // Support both formats: xAxis/yAxis and categoryField/field
+      const chartWithFields = chart as DashboardChart & { categoryField?: string; field?: string };
+      const categoryField = chartWithFields.categoryField || chart.xAxis;
+      const valueField = chartWithFields.field || chart.yAxis;
+      
+      if (!categoryField || !valueField) {
+        console.warn('Pie chart missing required fields:', { categoryField, valueField, chart });
+        return [];
+      }
+
+      // Group data by category field and sum value field
       const grouped = data.reduce((acc, item) => {
-        const key = String(item[chart.xAxis] || 'Unknown');
-        const value = Number(item[chart.yAxis] || 0);
+        const key = String(item[categoryField] || 'Unknown');
+        const value = Number(item[valueField] || 0);
         
         if (acc[key]) {
-          acc[key] += value;
+          acc[key] = (acc[key] as number) + value;
         } else {
           acc[key] = value;
         }
@@ -61,12 +71,26 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
 
           return (
             <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-              <p className="font-medium">{label}</p>
-              {payload.map((entry, index) => (
-                <p key={index} className="text-sm" style={{ color: entry.color }}>
-                  {entry.name}: {entry.value}
-                </p>
-              ))}
+              {chart.type === 'pie' && payload[0] ? (
+                <div>
+                  <p className="font-medium">{payload[0].name}</p>
+                  <p className="text-sm" style={{ color: payload[0].color }}>
+                    Value: {payload[0].value}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {payload[0].payload?.percent ? `${(payload[0].payload.percent * 100).toFixed(1)}%` : ''}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="font-medium">{label}</p>
+                  {payload.map((entry, index) => (
+                    <p key={index} className="text-sm" style={{ color: entry.color }}>
+                      {entry.name}: {entry.value}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           );
         }}
@@ -135,7 +159,10 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
                 outerRadius={80}
                 dataKey="value"
                 nameKey="name"
-                label={({ name, value }) => `${name}: ${value}`}
+                label={({ name, value, percent }) => 
+                  `${name}: ${(percent * 100).toFixed(1)}%`
+                }
+                labelLine={false}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

@@ -111,33 +111,6 @@ const Datasets = () => {
     }
   };
 
-  const createMapping = async () => {
-    if (!datasets || datasets.length < 2) {
-      toast({
-        title: "Insufficient datasets",
-        description: "You need at least 2 datasets to create mappings",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Get mapping for the first dataset as an example
-      const firstDataset = datasets[0];
-      await apiService.datasets.getMapping(firstDataset.id);
-      toast({
-        title: "Mapping loaded successfully",
-        description: "Dataset relationships have been loaded"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load dataset mapping",
-        variant: "destructive"
-      });
-    }
-  };
-
   const filteredDatasets = datasets?.filter(dataset =>
     dataset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (dataset.description && dataset.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -208,13 +181,6 @@ const Datasets = () => {
           </div>
           
           <div className="flex gap-3">
-            {datasets && datasets.length > 1 && (
-              <Button variant="outline" onClick={createMapping}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Create Mapping
-              </Button>
-            )}
-            
             {isAdmin && (
               <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                 <DialogTrigger asChild>

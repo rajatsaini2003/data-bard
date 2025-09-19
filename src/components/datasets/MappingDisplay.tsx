@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, AlertCircle, CheckCircle, Clock, Database, Key, Link } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { OrganizationMapping } from '@/types';
 import { toast } from '@/hooks/use-toast';
@@ -47,7 +49,7 @@ const MappingDisplay = () => {
           description: "Your organization mapping is being generated. This may take a few moments.",
         });
         
-        // Poll for completion (optional - you might want to use websockets or server-sent events)
+        // Poll for completion
         setTimeout(() => {
           fetchMapping();
         }, 5000);
@@ -76,41 +78,6 @@ const MappingDisplay = () => {
     fetchMapping();
   }, []);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'ready':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'generating':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready':
-        return 'bg-green-100 text-green-800';
-      case 'generating':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'error':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const formatMappingData = (data: Record<string, unknown>) => {
-    // This is a simplified display - you might want to create a more sophisticated visualization
-    try {
-      return JSON.stringify(data, null, 2);
-    } catch {
-      return 'Invalid mapping data';
-    }
-  };
-
   if (isLoading) {
     return (
       <Card>
@@ -137,13 +104,12 @@ const MappingDisplay = () => {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
               Organization Data Mapping
               {mapping && (
-                <Badge variant="secondary" className={getStatusColor(mapping.status)}>
-                  <div className="flex items-center gap-1">
-                    {getStatusIcon(mapping.status)}
-                    {mapping.status}
-                  </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Ready
                 </Badge>
               )}
             </CardTitle>
@@ -162,7 +128,7 @@ const MappingDisplay = () => {
             </Button>
             <Button
               onClick={generateMapping}
-              disabled={isGenerating || mapping?.status === 'generating'}
+              disabled={isGenerating}
               size="sm"
             >
               {isGenerating ? (
@@ -183,49 +149,152 @@ const MappingDisplay = () => {
         )}
 
         {mapping && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Created:</span>{' '}
-                {new Date(mapping.created_at).toLocaleDateString()}
+          <div className="space-y-6">
+            {/* Mapping Overview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <Database className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <div className="text-2xl font-bold">{mapping.table_count}</div>
+                <div className="text-sm text-muted-foreground">Tables</div>
               </div>
-              <div>
-                <span className="font-medium">Updated:</span>{' '}
-                {new Date(mapping.updated_at).toLocaleDateString()}
+              <div className="text-center p-4 border rounded-lg">
+                <Key className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <div className="text-2xl font-bold">{mapping.primary_keys.length}</div>
+                <div className="text-sm text-muted-foreground">Primary Keys</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <Link className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                <div className="text-2xl font-bold">{mapping.foreign_keys.length}</div>
+                <div className="text-sm text-muted-foreground">Foreign Keys</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                <div className="text-2xl font-bold">{(mapping.confidence_score * 100).toFixed(0)}%</div>
+                <div className="text-sm text-muted-foreground">Confidence</div>
               </div>
             </div>
 
-            {mapping.status === 'ready' && mapping.mapping_data && (
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <h4 className="font-medium mb-2">Mapping Data:</h4>
-                <pre className="text-xs overflow-auto max-h-64 bg-white p-3 rounded border">
-                  {formatMappingData(mapping.mapping_data)}
-                </pre>
-              </div>
-            )}
+            {/* Mapping Details */}
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="primary-keys">Primary Keys</TabsTrigger>
+                <TabsTrigger value="foreign-keys">Foreign Keys</TabsTrigger>
+              </TabsList>
 
-            {mapping.status === 'generating' && (
-              <div className="text-center py-8">
-                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-500" />
-                <p className="text-sm text-muted-foreground">
-                  Generating mapping... This may take a few minutes.
-                </p>
-              </div>
-            )}
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Version:</span> {mapping.version}
+                  </div>
+                  <div>
+                    <span className="font-medium">Generated:</span>{' '}
+                    {new Date(mapping.generated_at).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Created:</span>{' '}
+                    {new Date(mapping.created_at).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Confidence Score:</span>{' '}
+                    {(mapping.confidence_score * 100).toFixed(1)}%
+                  </div>
+                </div>
+                
+                {mapping.composite_keys.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Composite Keys:</h4>
+                    <div className="space-y-2">
+                      {mapping.composite_keys.map((key, index) => (
+                        <div key={index} className="p-3 bg-gray-50 rounded border">
+                          <div className="font-medium">{key.table}</div>
+                          <div className="text-sm text-gray-600">
+                            Columns: {key.columns.join(', ')} (Confidence: {(key.confidence * 100).toFixed(0)}%)
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
 
-            {mapping.status === 'error' && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  There was an error generating the mapping. Please try again.
-                </AlertDescription>
-              </Alert>
-            )}
+              <TabsContent value="primary-keys">
+                {mapping.primary_keys.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Table</TableHead>
+                        <TableHead>Column</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead>Uniqueness</TableHead>
+                        <TableHead>Null Count</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mapping.primary_keys.map((key, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{key.table}</TableCell>
+                          <TableCell>{key.column}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              {(key.confidence * 100).toFixed(0)}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{(key.uniqueness_ratio * 100).toFixed(1)}%</TableCell>
+                          <TableCell>{key.null_count}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No primary keys detected
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="foreign-keys">
+                {mapping.foreign_keys.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Source Table</TableHead>
+                        <TableHead>Source Column</TableHead>
+                        <TableHead>Target Table</TableHead>
+                        <TableHead>Target Column</TableHead>
+                        <TableHead>Confidence</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mapping.foreign_keys.map((key, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{key.source_table}</TableCell>
+                          <TableCell>{key.source_column}</TableCell>
+                          <TableCell className="font-medium">{key.target_table}</TableCell>
+                          <TableCell>{key.target_column}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              {(key.confidence * 100).toFixed(0)}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No foreign key relationships detected
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
         {!mapping && !error && (
           <div className="text-center py-8">
+            <Database className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">No Mapping Available</h3>
             <p className="text-sm text-muted-foreground mb-4">
               No mapping has been generated yet for your organization.
             </p>
