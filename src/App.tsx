@@ -10,6 +10,7 @@ import Employees from "./pages/Employees";
 import Settings from "./pages/Settings";
 // import Queries from "./pages/Queries"; // Removed as requested
 import Datasets from "./pages/Datasets";
+import TestDashboard from "./pages/TestDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
@@ -36,6 +37,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><Auth /></PublicRoute>} />
+            <Route path="/test-dashboard" element={<TestDashboard />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

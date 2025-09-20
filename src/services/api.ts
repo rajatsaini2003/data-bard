@@ -28,7 +28,7 @@ class ApiService {
   constructor() {
     this.client = axios.create({
       baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
-      timeout: 30000,
+      timeout: 60000, // Increased to 60 seconds for general requests
     });
 
     this.setupInterceptors();
@@ -289,7 +289,10 @@ class ApiService {
   // Query endpoints
   query = {
     submit: async (data: QueryRequest): Promise<DashboardResponse> => {
-      const response = await this.client.post('/query/', data);
+      // Use a longer timeout for query operations (5 minutes)
+      const response = await this.client.post('/query/', data, {
+        timeout: 120000, // 2 minutes
+      });
       return response.data;
     }
   };

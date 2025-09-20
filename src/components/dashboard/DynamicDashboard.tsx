@@ -57,13 +57,34 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
         description: "Your custom dashboard has been created successfully.",
       });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
-      const errorMessage = error.response?.data?.detail || 'Failed to generate dashboard';
-      setError(errorMessage);
+      const error = err as { 
+        response?: { data?: { detail?: string } }; 
+        code?: string; 
+        message?: string;
+      };
+      
+      let errorMessage = 'Failed to generate dashboard';
+      let errorDetails = '';
+      
+      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+        errorMessage = 'Connection Error';
+        errorDetails = 'Unable to connect to the server. Please check if the backend is running.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request Timeout';
+        errorDetails = 'The request took too long to complete. Please try again.';
+      } else if (error.response?.data?.detail) {
+        errorMessage = 'Server Error';
+        errorDetails = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = 'Request Failed';
+        errorDetails = error.message;
+      }
+      
+      setError(`${errorMessage}: ${errorDetails}`);
       
       toast({
-        title: "Generation Failed",
-        description: errorMessage,
+        title: errorMessage,
+        description: errorDetails,
         variant: "destructive"
       });
     } finally {
@@ -168,6 +189,21 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
 
   const renderLoadingSkeleton = () => (
     <div className="space-y-6">
+      {/* Loading message */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+            <div>
+              <p className="text-lg font-medium">Generating your dashboard...</p>
+              <p className="text-sm text-muted-foreground">
+                This may take up to 5 minutes. Please wait while we process your query.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
