@@ -139,6 +139,181 @@ const TestDashboard = () => {
         ]
       }
     },
+    medicalAnalysis: {
+      title: "Medical Data Analysis (Your Backend Response)",
+      json: {
+        "template": "minimal-reports",
+        "title": "Breast Cancer Diagnosis Dashboard",
+        "data": [
+          {
+            "id": 842302,
+            "diagnosis": "M",
+            "radius_mean": 17.99,
+            "texture_mean": 10.38,
+            "perimeter_mean": 122.8,
+            "area_mean": 1001.0,
+            "smoothness_mean": 0.1184,
+            "compactness_mean": 0.2776,
+            "concavity_mean": 0.3001,
+            "concave_points_mean": 0.1471,
+            "symmetry_mean": 0.2419,
+            "fractal_dimension_mean": 0.07871
+          },
+          {
+            "id": 842517,
+            "diagnosis": "M",
+            "radius_mean": 20.57,
+            "texture_mean": 17.77,
+            "perimeter_mean": 132.9,
+            "area_mean": 1326.0,
+            "smoothness_mean": 0.08474,
+            "compactness_mean": 0.07864,
+            "concavity_mean": 0.0869,
+            "concave_points_mean": 0.07017,
+            "symmetry_mean": 0.1812,
+            "fractal_dimension_mean": 0.05667
+          },
+          {
+            "id": 8510426,
+            "diagnosis": "B",
+            "radius_mean": 13.54,
+            "texture_mean": 14.36,
+            "perimeter_mean": 87.46,
+            "area_mean": 566.3,
+            "smoothness_mean": 0.09779,
+            "compactness_mean": 0.08129,
+            "concavity_mean": 0.06664,
+            "concave_points_mean": 0.04781,
+            "symmetry_mean": 0.1885,
+            "fractal_dimension_mean": 0.05766
+          },
+          {
+            "id": 8510653,
+            "diagnosis": "B",
+            "radius_mean": 13.08,
+            "texture_mean": 15.71,
+            "perimeter_mean": 85.63,
+            "area_mean": 520.0,
+            "smoothness_mean": 0.1075,
+            "compactness_mean": 0.127,
+            "concavity_mean": 0.04568,
+            "concave_points_mean": 0.0311,
+            "symmetry_mean": 0.1967,
+            "fractal_dimension_mean": 0.06811
+          }
+        ],
+        "filters": [
+          {
+            "field": "diagnosis",
+            "type": "dropdown",
+            "options": ["All", "M", "B"],
+            "label": "Diagnosis Type (M=Malignant, B=Benign)"
+          }
+        ],
+        "cards": [
+          {
+            "id": "card-1",
+            "title": "Total Records",
+            "valueField": "id",
+            "aggregation": "count",
+            "format": "number"
+          },
+          {
+            "id": "card-2",
+            "title": "Average Radius",
+            "valueField": "radius_mean",
+            "aggregation": "avg",
+            "format": "decimal"
+          },
+          {
+            "id": "card-3",
+            "title": "Average Area",
+            "valueField": "area_mean",
+            "aggregation": "avg",
+            "format": "decimal"
+          }
+        ],
+        "charts": [
+          {
+            "id": "chart-1",
+            "type": "bar",
+            "title": "Average Measurements by Diagnosis",
+            "xAxis": "diagnosis",
+            "yAxis": "radius_mean",
+            "series": [
+              {
+                "name": "Radius Mean",
+                "field": "radius_mean",
+                "type": "bar"
+              }
+            ]
+          },
+          {
+            "id": "chart-2",
+            "type": "pie",
+            "title": "Diagnosis Distribution",
+            "categoryField": "diagnosis",
+            "field": "id"
+          },
+          {
+            "id": "chart-3",
+            "type": "line",
+            "title": "Texture vs Radius Relationship",
+            "xAxis": "texture_mean",
+            "yAxis": "radius_mean",
+            "series": [
+              {
+                "name": "Texture vs Radius",
+                "field": "radius_mean",
+                "type": "line"
+              }
+            ]
+          }
+        ],
+        "tables": [
+          {
+            "id": "table-1",
+            "title": "Medical Data Analysis",
+            "columns": [
+              {
+                "field": "id",
+                "header": "Patient ID",
+                "sortable": true
+              },
+              {
+                "field": "diagnosis",
+                "header": "Diagnosis",
+                "sortable": true
+              },
+              {
+                "field": "radius_mean",
+                "header": "Radius Mean",
+                "format": "decimal",
+                "sortable": true
+              },
+              {
+                "field": "texture_mean",
+                "header": "Texture Mean",
+                "format": "decimal",
+                "sortable": true
+              },
+              {
+                "field": "area_mean",
+                "header": "Area Mean",
+                "format": "decimal",
+                "sortable": true
+              },
+              {
+                "field": "smoothness_mean",
+                "header": "Smoothness Mean",
+                "format": "decimal",
+                "sortable": true
+              }
+            ]
+          }
+        ]
+      }
+    },
     customerAnalytics: {
       title: "Customer Analytics",
       json: {
@@ -209,6 +384,236 @@ const TestDashboard = () => {
         ]
       }
     },
+    realMovieData: {
+      title: "Real Movie Dataset (From Your Backend)",
+      json: {
+        "template": "minimal-reports",
+        "title": "Movies Dataset Dashboard",
+        "data": [
+          {
+            "unnamed:_0": 0,
+            "moive_name": " Leave the World Behind",
+            "rating": 6.5,
+            "votes": 90000.0,
+            "meta_score": 67.0,
+            "genre": "Drama, Mystery, Thriller",
+            "pg_rating": "R",
+            "year": 2023,
+            "duration": "2h 18m",
+            "cast": "Julia Roberts, Mahershala Ali, Ethan Hawke, Myha'la",
+            "director": "Sam Esmail"
+          },
+          {
+            "unnamed:_0": 1,
+            "moive_name": " Wonka",
+            "rating": 7.4,
+            "votes": 24000.0,
+            "meta_score": 66.0,
+            "genre": "Adventure, Comedy, Family",
+            "pg_rating": "PG",
+            "year": 2023,
+            "duration": "1h 56m",
+            "cast": "Timothée Chalamet, Gustave Die, Murray McArthur, Paul G. Raymond",
+            "director": "Paul King"
+          },
+          {
+            "unnamed:_0": 2,
+            "moive_name": " Poor Things",
+            "rating": 8.5,
+            "votes": 6700.0,
+            "meta_score": 86.0,
+            "genre": "Comedy, Drama, Romance",
+            "pg_rating": "R",
+            "year": 2023,
+            "duration": "2h 21m",
+            "cast": "Emma Stone, Mark Ruffalo, Willem Dafoe, Ramy Youssef",
+            "director": "Yorgos Lanthimos"
+          },
+          {
+            "unnamed:_0": 3,
+            "moive_name": " Killers of the Flower Moon",
+            "rating": 7.8,
+            "votes": 128000.0,
+            "meta_score": 89.0,
+            "genre": "Crime, Drama, History",
+            "pg_rating": "R",
+            "year": 2023,
+            "duration": "3h 26m",
+            "cast": "Leonardo DiCaprio, Robert De Niro, Lily Gladstone, Jesse Plemons",
+            "director": "Martin Scorsese"
+          }
+        ]
+      }
+    },
+    movieAnalysis: {
+      title: "Movies Dataset Analysis (Fixed Structure)",
+      json: {
+        "template": "minimal-reports",
+        "title": "Movies Dataset Dashboard",
+        "data": [
+          {
+            "unnamed:_0": 0,
+            "moive_name": " Leave the World Behind",
+            "rating": 6.5,
+            "votes": 90000.0,
+            "meta_score": 67.0,
+            "genre": "Drama, Mystery, Thriller",
+            "pg_rating": "R",
+            "year": 2023,
+            "duration": "2h 18m",
+            "cast": "Julia Roberts, Mahershala Ali, Ethan Hawke, Myha'la",
+            "director": "Sam Esmail"
+          },
+          {
+            "unnamed:_0": 1,
+            "moive_name": " Wonka",
+            "rating": 7.4,
+            "votes": 85000.0,
+            "meta_score": 73.0,
+            "genre": "Adventure, Comedy, Family",
+            "pg_rating": "PG",
+            "year": 2023,
+            "duration": "1h 56m",
+            "cast": "Timothée Chalamet, Calah Lane, Keegan-Michael Key",
+            "director": "Paul King"
+          },
+          {
+            "unnamed:_0": 2,
+            "moive_name": " Poor Things",
+            "rating": 8.5,
+            "votes": 95000.0,
+            "meta_score": 88.0,
+            "genre": "Comedy, Drama, Romance",
+            "pg_rating": "R",
+            "year": 2023,
+            "duration": "2h 21m",
+            "cast": "Emma Stone, Mark Ruffalo, Willem Dafoe",
+            "director": "Yorgos Lanthimos"
+          }
+        ],
+        "filters": [
+          {
+            "field": "genre",
+            "type": "dropdown",
+            "options": ["Drama, Mystery, Thriller", "Adventure, Comedy, Family", "Comedy, Drama, Romance"],
+            "label": "Genre Filter"
+          },
+          {
+            "field": "year",
+            "type": "dropdown",
+            "options": ["2023", "2022", "2021"],
+            "label": "Year"
+          },
+          {
+            "field": "pg_rating",
+            "type": "dropdown",
+            "options": ["R", "PG", "PG-13", "G"],
+            "label": "Rating"
+          }
+        ],
+        "cards": [
+          {
+            "id": "card-1",
+            "title": "Average Rating",
+            "valueField": "rating",
+            "aggregation": "avg",
+            "format": "decimal"
+          },
+          {
+            "id": "card-2",
+            "title": "Total Movies",
+            "valueField": "moive_name",
+            "aggregation": "count",
+            "format": "number"
+          },
+          {
+            "id": "card-3",
+            "title": "Average Meta Score",
+            "valueField": "meta_score",
+            "aggregation": "avg",
+            "format": "decimal"
+          },
+          {
+            "id": "card-4",
+            "title": "Total Votes",
+            "valueField": "votes",
+            "aggregation": "sum",
+            "format": "number"
+          }
+        ],
+        "charts": [
+          {
+            "id": "chart-1",
+            "type": "bar",
+            "title": "Movies by Genre",
+            "xAxis": "genre",
+            "yAxis": "rating",
+            "series": [
+              {
+                "name": "Average Rating",
+                "field": "rating",
+                "type": "bar"
+              }
+            ]
+          },
+          {
+            "id": "chart-2",
+            "type": "pie",
+            "title": "Movies Distribution by Rating",
+            "categoryField": "pg_rating",
+            "field": "votes"
+          },
+          {
+            "id": "chart-3",
+            "type": "line",
+            "title": "Rating vs Meta Score",
+            "xAxis": "rating",
+            "yAxis": "meta_score",
+            "series": [
+              {
+                "name": "Meta Score",
+                "field": "meta_score",
+                "type": "line"
+              }
+            ]
+          }
+        ],
+        "tables": [
+          {
+            "id": "table-1",
+            "title": "Movie Data",
+            "columns": [
+              {
+                "field": "moive_name",
+                "header": "Movie Name",
+                "sortable": true
+              },
+              {
+                "field": "rating",
+                "header": "Rating",
+                "sortable": true,
+                "format": "decimal"
+              },
+              {
+                "field": "genre",
+                "header": "Genre",
+                "sortable": true
+              },
+              {
+                "field": "year",
+                "header": "Year",
+                "sortable": true
+              },
+              {
+                "field": "director",
+                "header": "Director",
+                "sortable": true
+              }
+            ]
+          }
+        ]
+      }
+    },
     performanceMetrics: {
       title: "Performance Metrics",
       json: {
@@ -273,6 +678,254 @@ const TestDashboard = () => {
     }
   };
 
+  const fixDashboardConfiguration = (parsedData: Record<string, unknown>) => {
+    if (!parsedData.data || !Array.isArray(parsedData.data) || parsedData.data.length === 0) {
+      return parsedData;
+    }
+
+    const sampleRecord = parsedData.data[0];
+    const availableFields = Object.keys(sampleRecord);
+
+    // Create default cards if missing or empty
+    if (!parsedData.cards || !Array.isArray(parsedData.cards) || parsedData.cards.length === 0) {
+      const numericFields = availableFields.filter(field => 
+        typeof sampleRecord[field] === 'number' && 
+        field !== 'id' && 
+        !field.startsWith('unnamed') &&
+        sampleRecord[field] !== null
+      );
+      
+      // Get a meaningful identifier field for counting
+      const countField = availableFields.find(field => 
+        field.includes('name') || field.includes('title') || field === 'id' ||
+        (typeof sampleRecord[field] === 'string' && sampleRecord[field])
+      ) || availableFields[0];
+      
+      const defaultCards = [];
+      
+      // Total count card with proper field
+      if (countField) {
+        defaultCards.push({
+          id: 'card-count',
+          title: 'Total Movies',
+          valueField: countField,
+          aggregation: 'count',
+          format: 'number'
+        });
+      }
+
+      // Add cards for meaningful numeric fields
+      const priorityFields = ['rating', 'votes', 'meta_score', 'year'];
+      const selectedFields = [];
+      
+      // First, try to get priority fields
+      priorityFields.forEach(priority => {
+        const field = numericFields.find(f => f.includes(priority));
+        if (field && selectedFields.length < 3) {
+          selectedFields.push(field);
+        }
+      });
+      
+      // Fill remaining slots with other numeric fields
+      numericFields.forEach(field => {
+        if (selectedFields.length < 3 && !selectedFields.includes(field)) {
+          selectedFields.push(field);
+        }
+      });
+
+      selectedFields.forEach((field, index) => {
+        let title = field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+        let aggregation = 'avg';
+        let format = 'number';
+        
+        // Customize based on field type
+        if (field.includes('rating') || field.includes('score')) {
+          title = `Average ${title}`;
+          format = 'decimal';
+        } else if (field.includes('votes') || field.includes('count')) {
+          title = `Total ${title}`;
+          aggregation = 'sum';
+        } else if (field.includes('year')) {
+          title = `Average ${title}`;
+        }
+        
+        defaultCards.push({
+          id: `card-${index + 1}`,
+          title,
+          valueField: field,
+          aggregation,
+          format
+        });
+      });
+
+      parsedData.cards = defaultCards;
+    }
+
+    // Fix existing cards that reference non-existent fields
+    if (parsedData.cards && Array.isArray(parsedData.cards)) {
+      parsedData.cards = parsedData.cards.map((card: Record<string, unknown>) => {
+        if (card.valueField && !availableFields.includes(card.valueField as string)) {
+          // Try to find a suitable numeric field, avoid unnamed fields
+          const numericField = availableFields.find(field => 
+            typeof sampleRecord[field] === 'number' && 
+            field !== 'id' && 
+            !field.startsWith('unnamed') &&
+            sampleRecord[field] !== null
+          );
+          
+          if (numericField) {
+            return { ...card, valueField: numericField };
+          }
+          
+          // Fallback to count aggregation on a meaningful field
+          const countField = availableFields.find(field => 
+            field.includes('name') || field.includes('title') || field === 'id'
+          ) || availableFields[0];
+          
+          return { 
+            ...card, 
+            valueField: countField,
+            aggregation: 'count',
+            title: card.title || 'Count'
+          };
+        }
+        return card;
+      });
+    }
+
+    // Fix charts that reference non-existent fields
+    if (parsedData.charts && Array.isArray(parsedData.charts)) {
+      parsedData.charts = parsedData.charts.map((chart: Record<string, unknown>) => {
+        const updatedChart = { ...chart };
+
+        // If chart has its own data, use that for field validation, otherwise use main data
+        const chartData = (chart.data && Array.isArray(chart.data) && chart.data.length > 0) 
+          ? chart.data[0] 
+          : sampleRecord;
+        const chartFields = Object.keys(chartData);
+
+        // Fix xAxis field
+        if (chart.xAxis && !chartFields.includes(chart.xAxis as string)) {
+          const categoricalField = chartFields.find(field => 
+            !field.startsWith('unnamed') &&
+            (typeof chartData[field] === 'string' || 
+            (typeof chartData[field] === 'number' && (field.includes('year') || field === 'id')))
+          );
+          if (categoricalField) {
+            updatedChart.xAxis = categoricalField;
+          }
+        }
+
+        // Fix yAxis field
+        if (chart.yAxis && !chartFields.includes(chart.yAxis as string)) {
+          const numericField = chartFields.find(field => 
+            !field.startsWith('unnamed') &&
+            typeof chartData[field] === 'number' && 
+            !field.includes('year') && 
+            field !== 'id' &&
+            chartData[field] !== null
+          );
+          if (numericField) {
+            updatedChart.yAxis = numericField;
+          }
+        }
+
+        // Fix categoryField for pie charts
+        if (chart.type === 'pie' && chart.categoryField && !chartFields.includes(chart.categoryField as string)) {
+          const categoricalField = chartFields.find(field => 
+            typeof chartData[field] === 'string'
+          );
+          if (categoricalField) {
+            updatedChart.categoryField = categoricalField;
+          }
+        }
+
+        // Fix field for pie charts
+        if (chart.type === 'pie' && chart.field && !chartFields.includes(chart.field as string)) {
+          const numericField = chartFields.find(field => 
+            typeof chartData[field] === 'number'
+          );
+          if (numericField) {
+            updatedChart.field = numericField;
+          }
+        }
+
+        // Fix series fields
+        if (chart.series && Array.isArray(chart.series)) {
+          updatedChart.series = chart.series.map((series: Record<string, unknown>) => {
+            if (series.field && !availableFields.includes(series.field as string)) {
+              const numericField = availableFields.find(field => 
+                typeof sampleRecord[field] === 'number' && field !== 'id'
+              );
+              if (numericField) {
+                return { ...series, field: numericField };
+              }
+            }
+            return series;
+          });
+        }
+
+        return updatedChart;
+      });
+    }
+
+    // Fix table columns that reference non-existent fields
+    if (parsedData.tables && Array.isArray(parsedData.tables)) {
+      parsedData.tables = parsedData.tables.map((table: Record<string, unknown>) => {
+        if (table.columns && Array.isArray(table.columns)) {
+          const validColumns = table.columns.filter((col: Record<string, unknown>) => 
+            availableFields.includes(col.field as string)
+          );
+          
+          // If no valid columns, create some from available fields
+          if (validColumns.length === 0) {
+            const defaultColumns = availableFields.slice(0, 5).map(field => ({
+              field,
+              header: field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+              sortable: true,
+              format: typeof sampleRecord[field] === 'number' ? 'number' : 'text'
+            }));
+            return { ...table, columns: defaultColumns };
+          }
+          
+          return { ...table, columns: validColumns };
+        }
+        return table;
+      });
+    }
+
+    // Fix filters with complex structure and nested data
+    if (parsedData.filters && Array.isArray(parsedData.filters)) {
+      parsedData.filters = parsedData.filters.map((filter: Record<string, unknown>) => {
+        const fixedFilter = { ...filter };
+        
+        // If filter has its own data array with options, extract them
+        if (filter.data && Array.isArray(filter.data) && filter.data.length > 0) {
+          const filterOptions = filter.data.map((item: Record<string, unknown>) => {
+            const field = filter.target_field || filter.field;
+            return item[field as string] || item[Object.keys(item)[0]];
+          }).filter(Boolean);
+          
+          fixedFilter.options = [...new Set(filterOptions)].slice(0, 20); // Limit to 20 options
+        }
+        
+        // Ensure the filter field exists in main data
+        if (filter.field && !availableFields.includes(filter.field as string)) {
+          const categoricalField = availableFields.find(field => 
+            typeof sampleRecord[field] === 'string'
+          );
+          if (categoricalField) {
+            fixedFilter.field = categoricalField;
+          }
+        }
+        
+        return fixedFilter;
+      });
+    }
+
+    return parsedData;
+  };
+
   const handleJsonSubmit = () => {
     if (!jsonInput.trim()) {
       toast({
@@ -285,13 +938,15 @@ const TestDashboard = () => {
 
     try {
       const parsedData = JSON.parse(jsonInput);
-      setDashboardData(parsedData);
-      setFilteredData(parsedData.data || []);
+      const fixedData = fixDashboardConfiguration(parsedData);
+      
+      setDashboardData(fixedData as unknown as DashboardData);
+      setFilteredData((fixedData.data as Record<string, unknown>[]) || []);
       setError(null);
       
       toast({
         title: "Dashboard Rendered",
-        description: "Your JSON has been successfully parsed and rendered.",
+        description: "Your JSON has been successfully parsed and rendered. Configuration was automatically adjusted to match your data structure.",
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Invalid JSON format';
@@ -354,6 +1009,26 @@ const TestDashboard = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const loadSampleDashboard = async () => {
+    try {
+      // Import the sample dashboard JSON file
+      const sampleDashboard = await import('@/utils/sampledashboard.json');
+      const jsonString = JSON.stringify(sampleDashboard.default || sampleDashboard, null, 2);
+      setJsonInput(jsonString);
+      
+      toast({
+        title: "Sample Dashboard Loaded",
+        description: "Full movie dataset with dashboard configuration loaded from sampledashboard.json",
+      });
+    } catch (err) {
+      toast({
+        title: "Load Failed",
+        description: "Failed to load sampledashboard.json file.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleFiltersChange = (newFilteredData: Record<string, unknown>[]) => {

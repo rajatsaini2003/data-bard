@@ -17,10 +17,19 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
   ];
 
   const processDataForChart = (chart: DashboardChart) => {
-    if (chart.data && chart.data.length > 0) {
-      // Use predefined data (e.g., for pie charts)
-      return chart.data;
+    // Check for chart-specific data (from API responses with SQL queries)
+    const chartWithData = chart as DashboardChart & { data?: Record<string, unknown>[] };
+    if (chartWithData.data && chartWithData.data.length > 0) {
+      // Use predefined data (e.g., for charts with SQL queries)
+      // Note: Predefined chart data doesn't get filtered by the dashboard filters
+      return chartWithData.data;
     }
+
+    // Use filtered data from the dashboard
+    const workingData = data.filter(item => {
+      // Filter out null/undefined values for better visualization
+      return Object.values(item).some(value => value !== null && value !== undefined && value !== '');
+    });
 
     // Process data based on chart type
     if (chart.type === 'pie') {
@@ -35,9 +44,18 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
       }
 
       // Group data by category field and sum value field
-      const grouped = data.reduce((acc, item) => {
-        const key = String(item[categoryField] || 'Unknown');
-        const value = Number(item[valueField] || 0);
+      const grouped = workingData.reduce((acc, item) => {
+        const categoryValue = item[categoryField];
+        const numericValue = item[valueField];
+        
+        // Skip items with null/undefined values
+        if (categoryValue === null || categoryValue === undefined || 
+            numericValue === null || numericValue === undefined) {
+          return acc;
+        }
+        
+        const key = String(categoryValue);
+        const value = Number(numericValue) || 0;
         
         if (acc[key]) {
           acc[key] = (acc[key] as number) + value;
@@ -47,18 +65,28 @@ const DynamicCharts = ({ charts, data, className }: DynamicChartsProps) => {
         return acc;
       }, {} as Record<string, number>);
 
-      return Object.entries(grouped).map(([name, value]) => ({
-        name,
-        value
-      }));
+      return Object.entries(grouped)
+        .filter(([_, value]) => (value as number) > 0) // Remove zero values
+        .map(([name, value]) => ({
+          name,
+          value: value as number
+        }));
     }
 
-    // For other chart types, return data as-is with proper field mapping
-    return data.map(item => ({
-      ...item,
-      [chart.xAxis]: item[chart.xAxis],
-      [chart.yAxis]: item[chart.yAxis]
-    }));
+    // For other chart types, return filtered data with proper field mapping
+    return workingData
+      .filter(item => {
+        // Ensure chart fields have valid values
+        const xValue = item[chart.xAxis];
+        const yValue = item[chart.yAxis];
+        return xValue !== null && xValue !== undefined && 
+               yValue !== null && yValue !== undefined;
+      })
+      .map(item => ({
+        ...item,
+        [chart.xAxis]: item[chart.xAxis],
+        [chart.yAxis]: item[chart.yAxis]
+      }));
   };
 
   const renderTooltip = (chart: DashboardChart) => {

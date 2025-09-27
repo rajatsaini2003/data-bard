@@ -12,7 +12,7 @@ import DynamicCharts from './DynamicCharts';
 import DynamicTable from './DynamicTable';
 import { Search, AlertCircle, BarChart3, Send, RefreshCw } from 'lucide-react';
 import { apiService } from '@/services/api';
-import { DashboardData } from '@/types';
+import { DashboardData, DashboardChart, TableColumn } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
 interface DynamicDashboardProps {
@@ -28,11 +28,285 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
 
   // Example queries for user guidance
   const exampleQueries = [
-    "Show me sales performance by region",
-    "Display revenue trends over time",
-    "Analyze product performance metrics",
-    "Create a dashboard for customer analytics"
+    "Show me sales performance by region with revenue breakdown",
+    "Display revenue trends over the last 12 months with comparison",
+    "Analyze product performance metrics including quantity and profit margins",
+    "Create a customer analytics dashboard with demographic insights",
+    "Show employee performance metrics by department",
+    "Display medical data analysis with diagnostic patterns"
   ];
+
+  // Auto-fix configuration function to handle field mapping mismatches
+  const fixDashboardConfiguration = (data: DashboardData): DashboardData => {
+    if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+      return data;
+    }
+
+    const sampleRecord = data.data[0];
+    const availableFields = Object.keys(sampleRecord);
+    const fixedData = { ...data };
+
+    // Create default cards if missing or empty
+    if (!fixedData.cards || !Array.isArray(fixedData.cards) || fixedData.cards.length === 0) {
+      const numericFields = availableFields.filter(field => 
+        typeof sampleRecord[field] === 'number' && 
+        field !== 'id' && 
+        !field.startsWith('unnamed') &&
+        sampleRecord[field] !== null
+      );
+      
+      // Get a meaningful identifier field for counting
+      const countField = availableFields.find(field => 
+        field.includes('name') || field.includes('title') || field === 'id' ||
+        (typeof sampleRecord[field] === 'string' && sampleRecord[field])
+      ) || availableFields[0];
+      
+      const defaultCards = [];
+      
+      // Total count card with proper field
+      if (countField) {
+        defaultCards.push({
+          id: 'card-count',
+          title: 'Total Movies',
+          valueField: countField,
+          aggregation: 'count' as const,
+          format: 'number'
+        });
+      }
+
+      // Add cards for meaningful numeric fields
+      const priorityFields = ['rating', 'votes', 'meta_score', 'year'];
+      const selectedFields = [];
+      
+      // First, try to get priority fields
+      priorityFields.forEach(priority => {
+        const field = numericFields.find(f => f.includes(priority));
+        if (field && selectedFields.length < 3) {
+          selectedFields.push(field);
+        }
+      });
+      
+      // Fill remaining slots with other numeric fields
+      numericFields.forEach(field => {
+        if (selectedFields.length < 3 && !selectedFields.includes(field)) {
+          selectedFields.push(field);
+        }
+      });
+
+      selectedFields.forEach((field, index) => {
+        let title = field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+        let aggregation: 'avg' | 'sum' | 'count' = 'avg';
+        let format = 'number';
+        
+        // Customize based on field type
+        if (field.includes('rating') || field.includes('score')) {
+          title = `Average ${title}`;
+          format = 'decimal';
+        } else if (field.includes('votes') || field.includes('count')) {
+          title = `Total ${title}`;
+          aggregation = 'sum';
+        } else if (field.includes('year')) {
+          title = `Average ${title}`;
+        }
+        
+        defaultCards.push({
+          id: `card-${index + 1}`,
+          title,
+          valueField: field,
+          aggregation,
+          format
+        });
+      });
+
+      fixedData.cards = defaultCards;
+    }
+
+    // Fix existing cards that reference non-existent fields
+    if (fixedData.cards && Array.isArray(fixedData.cards)) {
+      fixedData.cards = fixedData.cards.map((card) => {
+        if (card.valueField && !availableFields.includes(card.valueField)) {
+          // Try to find a suitable numeric field, avoid unnamed fields
+          const numericField = availableFields.find(field => 
+            typeof sampleRecord[field] === 'number' && 
+            field !== 'id' && 
+            !field.startsWith('unnamed') &&
+            sampleRecord[field] !== null
+          );
+          
+          if (numericField) {
+            return { ...card, valueField: numericField };
+          }
+          
+          // Fallback to count aggregation on a meaningful field
+          const countField = availableFields.find(field => 
+            field.includes('name') || field.includes('title') || field === 'id'
+          ) || availableFields[0];
+          
+          return { 
+            ...card, 
+            valueField: countField,
+            aggregation: 'count' as const,
+            title: card.title || 'Count'
+          };
+        }
+        return card;
+      });
+    }
+
+    // Fix charts that reference non-existent fields
+    if (fixedData.charts && Array.isArray(fixedData.charts)) {
+      fixedData.charts = fixedData.charts.map((chart) => {
+        const updatedChart = { ...chart };
+        const chartWithExtended = chart as DashboardChart & { categoryField?: string; field?: string; data?: Record<string, unknown>[] };
+
+        // If chart has its own data, use that for field validation, otherwise use main data
+        const chartData = (chartWithExtended.data && Array.isArray(chartWithExtended.data) && chartWithExtended.data.length > 0) 
+          ? chartWithExtended.data[0] 
+          : sampleRecord;
+        const chartFields = Object.keys(chartData);
+
+        // Fix xAxis field
+        if (chart.xAxis && !chartFields.includes(chart.xAxis)) {
+          const categoricalField = chartFields.find(field => 
+            !field.startsWith('unnamed') &&
+            (typeof chartData[field] === 'string' || 
+            (typeof chartData[field] === 'number' && (field.includes('year') || field === 'id')))
+          );
+          if (categoricalField) {
+            updatedChart.xAxis = categoricalField;
+          }
+        }
+
+        // Fix yAxis field
+        if (chart.yAxis && !chartFields.includes(chart.yAxis)) {
+          const numericField = chartFields.find(field => 
+            !field.startsWith('unnamed') &&
+            typeof chartData[field] === 'number' && 
+            !field.includes('year') && 
+            field !== 'id' &&
+            chartData[field] !== null
+          );
+          if (numericField) {
+            updatedChart.yAxis = numericField;
+          }
+        }
+
+        // Fix categoryField for pie charts
+        if (chart.type === 'pie' && chartWithExtended.categoryField && !chartFields.includes(chartWithExtended.categoryField)) {
+          const categoricalField = chartFields.find(field => 
+            typeof chartData[field] === 'string'
+          );
+          if (categoricalField) {
+            (updatedChart as typeof chartWithExtended).categoryField = categoricalField;
+          }
+        }
+
+        // Fix field for pie charts
+        if (chart.type === 'pie' && chartWithExtended.field && !chartFields.includes(chartWithExtended.field)) {
+          const numericField = chartFields.find(field => 
+            typeof chartData[field] === 'number'
+          );
+          if (numericField) {
+            (updatedChart as typeof chartWithExtended).field = numericField;
+          }
+        }
+
+        // Fix series fields
+        if (chart.series && Array.isArray(chart.series)) {
+          updatedChart.series = chart.series.map((series) => {
+            if (series.field && !chartFields.includes(series.field)) {
+              const numericField = chartFields.find(field => 
+                typeof chartData[field] === 'number' && !field.includes('year') && field !== 'id'
+              );
+              if (numericField) {
+                return { ...series, field: numericField };
+              }
+            }
+            return series;
+          });
+        }
+
+        return updatedChart;
+      });
+    }
+
+    // Fix table columns that reference non-existent fields
+    if (fixedData.tables && Array.isArray(fixedData.tables)) {
+      fixedData.tables = fixedData.tables.map((table) => {
+        if (table.columns && Array.isArray(table.columns)) {
+          const validColumns = table.columns.filter((col) => 
+            availableFields.includes(col.field)
+          );
+          
+          // If no valid columns, create some from available fields
+          if (validColumns.length === 0) {
+            const defaultColumns: TableColumn[] = availableFields.slice(0, 5).map(field => ({
+              field,
+              header: field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+              sortable: true,
+              format: typeof sampleRecord[field] === 'number' ? 'number' : 'text'
+            }));
+            return { ...table, columns: defaultColumns };
+          }
+          
+          return { ...table, columns: validColumns };
+        }
+        return table;
+      });
+    }
+
+    // Fix single table that references non-existent fields
+    if (fixedData.table && fixedData.table.columns && Array.isArray(fixedData.table.columns)) {
+      const validColumns = fixedData.table.columns.filter((col) => 
+        availableFields.includes(col.field)
+      );
+      
+      // If no valid columns, create some from available fields
+      if (validColumns.length === 0) {
+        const defaultColumns: TableColumn[] = availableFields.slice(0, 5).map(field => ({
+          field,
+          header: field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+          sortable: true,
+          format: typeof sampleRecord[field] === 'number' ? 'number' : 'text'
+        }));
+        fixedData.table = { ...fixedData.table, columns: defaultColumns };
+      } else {
+        fixedData.table = { ...fixedData.table, columns: validColumns };
+      }
+    }
+
+    // Fix filters with complex structure and nested data
+    if (fixedData.filters && Array.isArray(fixedData.filters)) {
+      fixedData.filters = fixedData.filters.map((filter) => {
+        const fixedFilter = { ...filter };
+        const filterWithData = filter as typeof filter & { data?: Record<string, unknown>[]; target_field?: string };
+        
+        // If filter has its own data array with options, extract them
+        if (filterWithData.data && Array.isArray(filterWithData.data) && filterWithData.data.length > 0) {
+          const filterOptions = filterWithData.data.map((item: Record<string, unknown>) => {
+            const field = filterWithData.target_field || filter.field;
+            return String(item[field as string] || item[Object.keys(item)[0]] || '');
+          }).filter(Boolean);
+          
+          fixedFilter.options = [...new Set(filterOptions)].slice(0, 20); // Limit to 20 options
+        }
+        
+        // Ensure the filter field exists in main data
+        if (filter.field && !availableFields.includes(filter.field)) {
+          const categoricalField = availableFields.find(field => 
+            typeof sampleRecord[field] === 'string'
+          );
+          if (categoricalField) {
+            fixedFilter.field = categoricalField;
+          }
+        }
+        
+        return fixedFilter;
+      });
+    }
+
+    return fixedData;
+  };
 
   const submitQuery = async () => {
     if (!query.trim()) {
@@ -49,12 +323,21 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
     
     try {
       const response = await apiService.query.submit({ query: query.trim() });
-      setDashboardData(response.data);
-      setFilteredData(response.data.data || []);
+      
+      // Apply auto-fix configuration to handle field mapping mismatches
+      const fixedData = fixDashboardConfiguration(response.data);
+      
+      setDashboardData(fixedData);
+      setFilteredData(fixedData.data || []);
+      
+      // Check if any auto-fixes were applied by comparing original and fixed data
+      const hasFieldMappingIssues = JSON.stringify(response.data) !== JSON.stringify(fixedData);
       
       toast({
         title: "Dashboard Generated",
-        description: "Your custom dashboard has been created successfully.",
+        description: hasFieldMappingIssues 
+          ? "Your custom dashboard has been created successfully. Configuration was automatically adjusted to match your data structure."
+          : "Your custom dashboard has been created successfully.",
       });
     } catch (err: unknown) {
       const error = err as { 
@@ -68,16 +351,19 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
       
       if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
         errorMessage = 'Connection Error';
-        errorDetails = 'Unable to connect to the server. Please check if the backend is running.';
+        errorDetails = 'Unable to connect to the server. Please check if the backend is running and try again.';
       } else if (error.code === 'ECONNABORTED') {
         errorMessage = 'Request Timeout';
-        errorDetails = 'The request took too long to complete. Please try again.';
+        errorDetails = 'The request took too long to complete. The server may be processing a large query. Please try again or simplify your query.';
       } else if (error.response?.data?.detail) {
         errorMessage = 'Server Error';
         errorDetails = error.response.data.detail;
       } else if (error.message) {
         errorMessage = 'Request Failed';
         errorDetails = error.message;
+      } else {
+        errorMessage = 'Unknown Error';
+        errorDetails = 'An unexpected error occurred while processing your request.';
       }
       
       setError(`${errorMessage}: ${errorDetails}`);
@@ -197,7 +483,7 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
             <div>
               <p className="text-lg font-medium">Generating your dashboard...</p>
               <p className="text-sm text-muted-foreground">
-                This may take up to 5 minutes. Please wait while we process your query.
+                This may take up to 5 minutes. We're analyzing your data and creating visualizations with automatic field mapping.
               </p>
             </div>
           </div>
@@ -312,9 +598,12 @@ const DynamicDashboard = ({ className }: DynamicDashboardProps) => {
         <Card className="text-center py-12">
           <CardContent>
             <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">No Dashboard Generated</h3>
+            <h3 className="text-lg font-medium mb-2">Ready to Generate Your Dashboard</h3>
             <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-              Enter a query above to generate a custom dashboard based on your data.
+              Enter a query above to generate a custom dashboard with automatic field mapping and intelligent visualizations based on your data.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Our System will automatically handle field mismatches and optimize your dashboard layout.
             </p>
           </CardContent>
         </Card>
