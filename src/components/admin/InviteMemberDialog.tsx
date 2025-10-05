@@ -31,7 +31,7 @@ export function InviteMemberDialog({ trigger, onInvited }: InviteMemberDialogPro
     try {
       const res = await apiService.admin.inviteUser({ email, role, message });
       // If the API returns an invite token, show the link to copy
-      const inviteLink = res?.id ? `http://localhost:8080/signup?token=${res.id}` : undefined;
+      const inviteLink = res?.id ? `https://data-bard.vercel.app/signup?token=${res.id}` : undefined;
       toast({ 
         title: "Invitation sent", 
         description: inviteLink ? `Invite link copied to clipboard` : `Invite sent to ${email}`

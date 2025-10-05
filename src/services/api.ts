@@ -27,7 +27,7 @@ class ApiService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
+      baseURL: import.meta.env.VITE_API_URL || 'https://backend-k57p.onrender.com/api/v1',
       timeout: 60000, // Increased to 60 seconds for general requests
     });
 
